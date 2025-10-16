@@ -1,0 +1,133 @@
+<?php
+session_start();
+include 'conn.php';
+
+$message = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = trim($_POST['email']);
+    $password = trim($_POST['password']);
+
+    if (empty($email) || empty($password)) {
+        $message = "⚠️ Please enter both email and password.";
+        goto end_login;
+    }
+
+    $sql = "SELECT ID, Email, Role FROM users WHERE email = ? AND password = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $email, $password);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if (!$result || $result->num_rows !== 1) {
+        $message = "❌ Invalid email or password.";
+        $stmt->close();
+        goto end_login;
+    }
+
+    $user = $result->fetch_assoc();
+    $_SESSION['user_id'] = $user['ID'];
+    $_SESSION['email'] = $user['Email'];
+    $_SESSION['role'] = $user['Role'];
+
+    $stmt->close();
+
+    if ($user['Role'] === 'admin') {
+        header("Location: ./admin/index.php");
+        exit;
+    }
+
+    header("Location: ./client/index.php");
+    exit;
+
+    end_login:
+}
+
+$conn->close();
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Mechakeys</title>
+    <link href="styles.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <?php if (!empty($message)): ?>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?php echo $message; ?>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" action="" class="form">
+                <div class="input-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        Email Address
+                    </label>
+                    <div style="position: relative;">
+                        <span class="input-icon">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                        <input type="email" id="email" name="email" placeholder=" " required>
+                    </div>
+                </div>
+
+                <div class="input-group password-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <div style="position: relative;">
+                        <span class="input-icon">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" id="password" name="password" placeholder=" " required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="forgot-password">
+                    <a href="#forgot">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-button">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+
+            <div class="register-link">
+                <p class="register-link-text">Don't have an account?</p>
+                <button type="button" class="register-button" onclick="window.location.href='register.php'">
+                    Create Account
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'fas fa-eye';
+            }
+        }
+    </script>
+</body>
+
+</html>
