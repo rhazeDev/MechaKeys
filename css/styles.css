@@ -366,35 +366,6 @@ body {
     transform: scale(0.98);
 }
 
-/* Forgot Password */
-.forgot-password {
-    text-align: center;
-    margin-top: 16px;
-}
-
-.forgot-password a {
-    font-size: 13px;
-    color: var(--secondary);
-    text-decoration: none;
-    transition: var(--transition);
-    position: relative;
-}
-
-.forgot-password a::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary);
-    transition: width 0.3s ease;
-}
-
-.forgot-password a:hover::after {
-    width: 100%;
-}
-
 /* Divider */
 .divider {
     display: flex;

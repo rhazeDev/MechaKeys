@@ -96,10 +96,6 @@ $conn->close();
                     </div>
                 </div>
 
-                <div class="forgot-password">
-                    <a href="#forgot">Forgot password?</a>
-                </div>
-
                 <button type="submit" class="login-button">
                     <i class="fas fa-sign-in-alt"></i>
                     Sign In
