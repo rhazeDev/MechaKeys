@@ -45,8 +45,8 @@ $isLoggedIn = isset($_SESSION['user_id']);
                     </div>
                 <?php else: ?>
                     <div class="auth-buttons">
-                        <a href="../../login.php" class="btn-login">Login</a>
-                        <a href="../../register.php" class="btn-register">Register</a>
+                        <a href="../login.php" class="btn-login">Login</a>
+                        <a href="../register.php" class="btn-register">Register</a>
                     </div>
                 <?php endif; ?>
             </div>
