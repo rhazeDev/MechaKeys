@@ -4,7 +4,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
 <nav class="navbar">
     <div class="navbar-container">
         <a href="index.php" class="navbar-logo">
-            ⌨️ MechaKeys
+            MechaKeys
         </a>
         
         <div class="navbar-search">
@@ -35,7 +35,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                                 <i class="fas fa-user"></i> Profile
                             </a>
                             <a href="#" class="dropdown-item">
-                                <i class="fas fa-cog"></i> Settings
+                                <i class="fas fa-cog"></i> Orders
                             </a>
                             <div class="dropdown-divider"></div>
                             <a href="../logout.php" class="dropdown-item">

@@ -10,7 +10,6 @@ $collections = [
 ?>
 <section class="section">
     <h2 class="section-title">
-        <i class="fas fa-th"></i>
         Keyboard Collections
     </h2>
     <div class="collection-grid">

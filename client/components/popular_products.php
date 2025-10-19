@@ -5,18 +5,19 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
 $sql = "SELECT 
             p.ProductID,
-            p.Name,
+            p.Brand,
+            p.Model,
             p.Description,
             p.Category,
-            p.Price,
             p.TotalSold,
-            pi.Path as ImagePath,
-            GROUP_CONCAT(DISTINCT CONCAT(pv.Layout, ' | ', pv.SwitchType, ' | ', pv.Color) SEPARATOR '; ') as Variations
+            (SELECT Path FROM ProductImages WHERE ProductImageID = p.ProductImageID LIMIT 1) as ImagePath,
+            (SELECT MIN(Price) FROM ProductVariations WHERE ProductID = p.ProductID) as MinPrice,
+            (SELECT MAX(Price) FROM ProductVariations WHERE ProductID = p.ProductID) as MaxPrice,
+            GROUP_CONCAT(DISTINCT CONCAT(pv.Layout, '% | ', pv.SwitchType, ' | ', pv.Color) SEPARATOR '; ') as Variations
         FROM Products p
-        LEFT JOIN ProductImages pi ON p.ProductImageID = pi.ProductImageID
         LEFT JOIN ProductVariations pv ON p.ProductID = pv.ProductID
         GROUP BY p.ProductID
-        ORDER BY p.TotalSold DESC, p.ProductID ASC
+        ORDER BY p.TotalSold DESC, p.ProductID DESC
         LIMIT 8";
 
 $result = $conn->query($sql);
@@ -29,14 +30,27 @@ if ($result && $result->num_rows > 0) {
             $imagePath = substr($imagePath, strlen('mechakeys/'));
         }
         
+        $minPrice = floatval($row['MinPrice'] ?? 0);
+        $maxPrice = floatval($row['MaxPrice'] ?? 0);
+        $priceDisplay = '';
+        if ($minPrice > 0 && $maxPrice > 0) {
+            if ($minPrice == $maxPrice) {
+                $priceDisplay = '₱' . number_format($minPrice, 2);
+            } else {
+                $priceDisplay = '₱' . number_format($minPrice, 2) . ' - ₱' . number_format($maxPrice, 2);
+            }
+        } else {
+            $priceDisplay = 'Price not available';
+        }
+        
         $featured_products[] = [
             'id' => $row['ProductID'],
-            'name' => $row['Name'],
+            'name' => $row['Brand'] . ' ' . $row['Model'],
             'description' => $row['Description'],
             'category' => $row['Category'],
-            'price' => '₱' . number_format($row['Price'], 2),
+            'price' => $priceDisplay,
             'image' => $imagePath ? '../' . $imagePath : null,
-            'specs' => $row['Variations'] ? $row['Variations'] : $row['category'],
+            'specs' => $row['Variations'] ? $row['Variations'] : $row['Category'],
             'total_sold' => $row['TotalSold']
         ];
     }
@@ -51,7 +65,7 @@ if ($result && $result->num_rows > 0) {
     <?php if (!$isLoggedIn): ?>
         <div class="login-prompt">
             <p><i class="fas fa-lock"></i> <strong>Sign in to add items to cart and checkout</strong></p>
-            <a href="../../login.php" class="btn-primary" style="display: inline-block; text-decoration: none;">
+            <a href="../login.php" class="btn-primary" style="display: inline-block; text-decoration: none;">
                 <i class="fas fa-sign-in-alt"></i> Login Now
             </a>
         </div>
@@ -80,18 +94,18 @@ if ($result && $result->num_rows > 0) {
                             <?php endif; ?>
                         </div>
                         <div class="product-specs">
-                            <i class="fas fa-info-circle"></i> <?php echo htmlspecialchars($product['specs']); ?>
+                            </i> <?php echo htmlspecialchars($product['specs']); ?>
                         </div>
                         <div class="product-footer">
                             <div class="product-price"><?php echo htmlspecialchars($product['price']); ?></div>
                             <div class="product-actions">
                                 <?php if ($isLoggedIn): ?>
                                     <button class="btn-cart" onclick="event.stopPropagation(); addToCart(<?php echo $product['id']; ?>)">
-                                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                                        <i class="fas fa-shopping-cart"></i>
                                     </button>
                                 <?php else: ?>
                                     <button class="btn-cart disabled" disabled title="Login to add to cart" onclick="event.stopPropagation();">
-                                        <i class="fas fa-lock"></i> Add to Cart
+                                        <i class="fas fa-lock"></i>
                                     </button>
                                 <?php endif; ?>
                             </div>
