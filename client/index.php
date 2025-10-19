@@ -23,7 +23,7 @@ session_start();
         <?php include 'components/brands.php'; ?>
     </main>
 
-    <?php include 'components/footer.php'; ?>
+    <?php // include 'components/footer.php'; ?>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
