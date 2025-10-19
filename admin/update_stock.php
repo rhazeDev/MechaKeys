@@ -4,7 +4,6 @@ include '../conn.php';
 
 header('Content-Type: application/json');
 
-// Check if user is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
@@ -12,7 +11,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Get JSON data
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
 
@@ -29,9 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Update stock
         $update_query = "UPDATE productvariations SET StockQuantity = $stock WHERE VariationID = $variation_id";
-        
+
         if ($conn->query($update_query)) {
             echo json_encode([
                 'success' => true,

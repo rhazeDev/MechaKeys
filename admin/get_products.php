@@ -4,7 +4,6 @@ include '../conn.php';
 
 header('Content-Type: application/json');
 
-// Check if user is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
@@ -18,18 +17,17 @@ try {
               (SELECT MAX(Price) FROM productvariations WHERE ProductID = p.ProductID) as MaxPrice
               FROM products p 
               ORDER BY p.ProductID DESC";
-    
+
     $result = $conn->query($query);
-    
+
     $products = [];
     while ($row = $result->fetch_assoc()) {
-        // Format price display
         $minPrice = floatval($row['MinPrice']);
         $maxPrice = floatval($row['MaxPrice']);
-        $priceDisplay = ($minPrice == $maxPrice) ? 
-                        number_format($minPrice, 2) : 
-                        number_format($minPrice, 2) . ' - ' . number_format($maxPrice, 2);
-        
+        $priceDisplay = ($minPrice == $maxPrice) ?
+            number_format($minPrice, 2) :
+            number_format($minPrice, 2) . ' - ' . number_format($maxPrice, 2);
+
         $products[] = [
             'ProductID' => $row['ProductID'],
             'Brand' => $row['Brand'],
@@ -44,7 +42,7 @@ try {
             'ImagePath' => $row['ImagePath']
         ];
     }
-    
+
     echo json_encode([
         'success' => true,
         'products' => $products

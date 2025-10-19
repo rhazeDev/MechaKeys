@@ -4,7 +4,6 @@ include '../conn.php';
 
 header('Content-Type: application/json');
 
-// Check if user is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
     exit;
@@ -15,9 +14,9 @@ try {
               FROM productvariations pv
               JOIN products p ON pv.ProductID = p.ProductID
               ORDER BY pv.StockQuantity ASC, p.Brand ASC, p.Model ASC";
-    
+
     $result = $conn->query($query);
-    
+
     $inventory = [];
     while ($row = $result->fetch_assoc()) {
         $inventory[] = [
@@ -31,7 +30,7 @@ try {
             'StockQuantity' => $row['StockQuantity']
         ];
     }
-    
+
     echo json_encode([
         'success' => true,
         'inventory' => $inventory
