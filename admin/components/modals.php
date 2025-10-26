@@ -74,6 +74,7 @@
                             <option value="keyboard">Keyboard</option>
                             <option value="keycap">Keycaps</option>
                             <option value="switches">Switches</option>
+                            <option value="accessories">Accessories</option>
                         </select>
                     </div>
                 </div>

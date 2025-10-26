@@ -40,6 +40,7 @@
                         <option value="keyboard">Keyboard</option>
                         <option value="keycaps">Keycaps</option>
                         <option value="switches">Switches</option>
+                        <option value="accessories">Accessories</option>
                     </select>
                 </div>
 
