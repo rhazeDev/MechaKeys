@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $_SESSION['email'] = $email;
     $_SESSION['role'] = 'customer';
 
-    header("Location: /client/index.php");
+    header("Location: ./client/index.php");
     exit;
 
     end_register:
