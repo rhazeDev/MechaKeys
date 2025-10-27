@@ -71,6 +71,7 @@ $conn->close();
     <title>Register | Mechakeys</title>
     <link href="css/styles.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="images/favicon.png" type="image/png">
 </head>
 
 <body>
