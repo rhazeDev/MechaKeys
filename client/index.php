@@ -9,18 +9,29 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home | MechaKeys</title>
     <link href="../css/client.css" rel="stylesheet">
+    <link rel="icon" href="images/favicon.png" type="image/png">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 
 <body>
     <?php include 'components/navbar.php'; ?>
 
-    <?php include 'components/hero.php'; ?>
+    <?php 
+    $hasCategory = isset($_GET['category']) && !empty($_GET['category']);
+    
+    if (!$hasCategory): 
+    ?>
+        <?php include 'components/hero.php'; ?>
+    <?php endif; ?>
 
     <main class="main-content">
-        <?php include 'components/collection.php'; ?>
-        <?php include 'components/popular_products.php'; ?>
-        <?php include 'components/brands.php'; ?>
+        <?php if ($hasCategory): ?>
+            <?php include 'components/all_products.php'; ?>
+        <?php else: ?>
+            <?php include 'components/collection.php'; ?>
+            <?php include 'components/popular_products.php'; ?>
+            <?php include 'components/brands.php'; ?>
+        <?php endif; ?>
     </main>
 
     <?php // include 'components/footer.php'; ?>
@@ -55,7 +66,7 @@ session_start();
                 return;
             }
 
-            alert('awan pay kas');
+            window.location.href = 'product.php?id=' + productId;
         }
 
         document.querySelectorAll('.btn-wishlist').forEach((btn, index) => {
