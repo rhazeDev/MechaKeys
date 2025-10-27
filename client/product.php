@@ -87,6 +87,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
     <link href="../css/client.css" rel="stylesheet">
     <link href="../css/product.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="images/favicon.png" type="image/png">
 </head>
 
 <body>
@@ -105,7 +106,8 @@ $isLoggedIn = isset($_SESSION['user_id']);
             <div class="product-gallery">
                 <div class="main-image" onclick="maximizeImage()">
                     <?php if (!empty($images)): ?>
-                        <img id="mainImage" src="../<?php echo htmlspecialchars($images[0]); ?>" alt="<?php echo htmlspecialchars($productName); ?>">
+                        <img id="mainImage" src="../<?php echo htmlspecialchars($images[0]); ?>"
+                            alt="<?php echo htmlspecialchars($productName); ?>">
                     <?php else: ?>
                         <div class="no-image">
                             <i class="fas fa-keyboard"></i>
@@ -115,10 +117,9 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 <?php if (count($images) > 1): ?>
                     <div class="thumbnail-gallery">
                         <?php foreach ($images as $index => $image): ?>
-                            <img src="../<?php echo htmlspecialchars($image); ?>" 
-                                 alt="Thumbnail <?php echo $index + 1; ?>" 
-                                 class="thumbnail <?php echo $index === 0 ? 'active' : ''; ?>"
-                                 onclick="changeImage(this, '../<?php echo htmlspecialchars($image); ?>')">
+                            <img src="../<?php echo htmlspecialchars($image); ?>" alt="Thumbnail <?php echo $index + 1; ?>"
+                                class="thumbnail <?php echo $index === 0 ? 'active' : ''; ?>"
+                                onclick="changeImage(this, '../<?php echo htmlspecialchars($image); ?>')">
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
@@ -140,12 +141,18 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                 <?php if (!empty($variations)): ?>
                     <!-- Stock and Price display at top -->
-                    <div id="topPriceStock" class="top-price-stock" style="display: none; flex-direction: column;">
-                        <div class="stock-display">
-                            Stock: <span id="topStock">0</span>
-                        </div>
-                        <div class="price-display" id="topPrice">
-                            0.00
+                    <div id="topPriceStock" class="top-price-stock" style="display: none;">
+                        <div class="price-stock-card">
+                            <div class="price-section">
+                                <div class="price-label">Price</div>
+                                <div class="price-display" id="topPrice">₱0.00</div>
+                            </div>
+                            <div class="stock-section">
+                                <div class="stock-label">Availability</div>
+                                <div class="stock-display" id="topStock">
+                                    <i class="fas fa-check-circle"></i> <span>0 in stock</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -153,7 +160,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 <?php if (empty($variations)): ?>
                     <div class="product-price-section">
                         <div class="price">
-                            <?php 
+                            <?php
                             if ($minPrice !== null && $maxPrice !== null) {
                                 if ($minPrice == $maxPrice) {
                                     echo '₱' . number_format($minPrice, 2);
@@ -171,12 +178,12 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                 <?php if (!empty($variations)): ?>
                     <input type="hidden" id="variationsData" value='<?php echo json_encode($variations); ?>'>
-                    
+
                     <div class="product-variations">
                         <h3><i class="fas fa-sliders-h"></i> Available Variations</h3>
-                        
+
                         <?php
-                                                $layouts = array_unique(array_column($variations, 'Layout'));
+                        $layouts = array_unique(array_column($variations, 'Layout'));
                         $switches = array_unique(array_column($variations, 'SwitchType'));
                         $colors = array_unique(array_column($variations, 'Color'));
                         sort($layouts);
@@ -189,10 +196,9 @@ $isLoggedIn = isset($_SESSION['user_id']);
                                 <label class="variation-label">LAYOUT:</label>
                                 <div class="variation-options" id="layoutOptions">
                                     <?php foreach ($layouts as $layout): ?>
-                                        <button class="variation-option-btn" 
-                                                data-type="layout" 
-                                                data-value="<?php echo htmlspecialchars($layout); ?>"
-                                                onclick="selectVariation('layout', '<?php echo htmlspecialchars($layout); ?>')">
+                                        <button class="variation-option-btn" data-type="layout"
+                                            data-value="<?php echo htmlspecialchars($layout); ?>"
+                                            onclick="selectVariation('layout', '<?php echo htmlspecialchars($layout); ?>')">
                                             <?php echo htmlspecialchars($layout); ?>%
                                         </button>
                                     <?php endforeach; ?>
@@ -205,10 +211,9 @@ $isLoggedIn = isset($_SESSION['user_id']);
                                 <label class="variation-label">SWITCH:</label>
                                 <div class="variation-options" id="switchOptions">
                                     <?php foreach ($switches as $switch): ?>
-                                        <button class="variation-option-btn" 
-                                                data-type="switch" 
-                                                data-value="<?php echo htmlspecialchars($switch); ?>"
-                                                onclick="selectVariation('switch', '<?php echo htmlspecialchars($switch); ?>')">
+                                        <button class="variation-option-btn" data-type="switch"
+                                            data-value="<?php echo htmlspecialchars($switch); ?>"
+                                            onclick="selectVariation('switch', '<?php echo htmlspecialchars($switch); ?>')">
                                             <?php echo htmlspecialchars($switch); ?>
                                         </button>
                                     <?php endforeach; ?>
@@ -221,10 +226,9 @@ $isLoggedIn = isset($_SESSION['user_id']);
                                 <label class="variation-label">COLOR:</label>
                                 <div class="variation-options" id="colorOptions">
                                     <?php foreach ($colors as $color): ?>
-                                        <button class="variation-option-btn" 
-                                                data-type="color" 
-                                                data-value="<?php echo htmlspecialchars($color); ?>"
-                                                onclick="selectVariation('color', '<?php echo htmlspecialchars($color); ?>')">
+                                        <button class="variation-option-btn" data-type="color"
+                                            data-value="<?php echo htmlspecialchars($color); ?>"
+                                            onclick="selectVariation('color', '<?php echo htmlspecialchars($color); ?>')">
                                             <?php echo htmlspecialchars($color); ?>
                                         </button>
                                     <?php endforeach; ?>
@@ -249,10 +253,12 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                 <div class="action-buttons">
                     <?php if ($isLoggedIn): ?>
-                        <button class="btn-add-cart disabled" onclick="addToCart(<?php echo $product['ProductID']; ?>)" disabled>
+                        <button class="btn-add-cart disabled" onclick="addToCart(<?php echo $product['ProductID']; ?>)"
+                            disabled>
                             <i class="fas fa-shopping-cart"></i> Add to Cart
                         </button>
-                        <button class="btn-buy-now disabled" onclick="buyNow(<?php echo $product['ProductID']; ?>)" disabled>
+                        <button class="btn-buy-now disabled" onclick="buyNow(<?php echo $product['ProductID']; ?>)"
+                            disabled>
                             <i class="fas fa-bolt"></i> Buy Now
                         </button>
                     <?php else: ?>
@@ -286,15 +292,15 @@ $isLoggedIn = isset($_SESSION['user_id']);
         };
         let currentVariationData = null;
 
-                document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const variationsDataEl = document.getElementById('variationsData');
             if (variationsDataEl) {
                 allVariations = JSON.parse(variationsDataEl.value);
-                
-                                const uniqueLayouts = [...new Set(allVariations.map(v => v.Layout))];
+
+                const uniqueLayouts = [...new Set(allVariations.map(v => v.Layout))];
                 const uniqueSwitches = [...new Set(allVariations.map(v => v.SwitchType))];
                 const uniqueColors = [...new Set(allVariations.map(v => v.Color))];
-                
+
                 if (uniqueLayouts.length === 1) {
                     selectedVariation.layout = uniqueLayouts[0].toString();
                 }
@@ -304,47 +310,91 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 if (uniqueColors.length === 1) {
                     selectedVariation.color = uniqueColors[0];
                 }
-                
+
                 updateAvailableOptions();
                 checkVariationComplete();
             }
 
-                        const profileDropdown = document.querySelector('.profile-dropdown');
+            const profileDropdown = document.querySelector('.profile-dropdown');
             const profileTrigger = document.querySelector('.profile-trigger');
             const dropdownMenu = document.querySelector('.dropdown-menu');
 
             if (profileTrigger && dropdownMenu) {
-                profileTrigger.addEventListener('click', function(e) {
+                profileTrigger.addEventListener('click', function (e) {
                     e.stopPropagation();
                     dropdownMenu.classList.toggle('show');
                 });
 
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     if (!profileDropdown.contains(e.target)) {
                         dropdownMenu.classList.remove('show');
                     }
                 });
 
-                dropdownMenu.addEventListener('click', function(e) {
+                dropdownMenu.addEventListener('click', function (e) {
                     e.stopPropagation();
                 });
             }
         });
 
         function selectVariation(type, value) {
-                        if (selectedVariation[type] === value) {
-                selectedVariation[type] = null;
-            } else {
-                selectedVariation[type] = value;
+            let testSelection = { ...selectedVariation, [type]: value };
+
+            let filteredVariations = allVariations;
+            if (testSelection.layout) {
+                filteredVariations = filteredVariations.filter(v => v.Layout == testSelection.layout);
+            }
+            if (testSelection.switch) {
+                filteredVariations = filteredVariations.filter(v => v.SwitchType === testSelection.switch);
+            }
+            if (testSelection.color) {
+                filteredVariations = filteredVariations.filter(v => v.Color === testSelection.color);
             }
 
-                        updateVariationUI(type);
+            if (filteredVariations.length === 0) {
+                selectedVariation[type] = value;
+
+                filteredVariations = allVariations.filter(v => {
+                    if (type === 'layout') return v.Layout == value;
+                    if (type === 'switch') return v.SwitchType === value;
+                    if (type === 'color') return v.Color === value;
+                    return true;
+                });
+
+                const otherTypes = ['layout', 'switch', 'color'].filter(t => t !== type);
+                otherTypes.forEach(otherType => {
+                    const availableValues = [...new Set(filteredVariations.map(v => {
+                        if (otherType === 'layout') return v.Layout;
+                        if (otherType === 'switch') return v.SwitchType;
+                        if (otherType === 'color') return v.Color;
+                    }))];
+
+                    if (availableValues.length > 0) {
+                        selectedVariation[otherType] = availableValues[0].toString();
+
+                        filteredVariations = filteredVariations.filter(v => {
+                            if (otherType === 'layout') return v.Layout == availableValues[0];
+                            if (otherType === 'switch') return v.SwitchType === availableValues[0];
+                            if (otherType === 'color') return v.Color === availableValues[0];
+                            return true;
+                        });
+                    }
+                });
+            } else {
+                if (selectedVariation[type] === value) {
+                    selectedVariation[type] = null;
+                } else {
+                    selectedVariation[type] = value;
+                }
+            }
+
+            ['layout', 'switch', 'color'].forEach(t => updateVariationUI(t));
             updateAvailableOptions();
             checkVariationComplete();
         }
 
         function updateVariationUI(type) {
-                        const buttons = document.querySelectorAll(`[data-type="${type}"]`);
+            const buttons = document.querySelectorAll(`[data-type="${type}"]`);
             buttons.forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.value === selectedVariation[type]) {
@@ -354,7 +404,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
         }
 
         function updateAvailableOptions() {
-                        let filteredVariations = allVariations;
+            let filteredVariations = allVariations;
 
             if (selectedVariation.layout) {
                 filteredVariations = filteredVariations.filter(v => v.Layout == selectedVariation.layout);
@@ -366,11 +416,11 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 filteredVariations = filteredVariations.filter(v => v.Color === selectedVariation.color);
             }
 
-                        const availableLayouts = [...new Set(filteredVariations.map(v => v.Layout))];
+            const availableLayouts = [...new Set(filteredVariations.map(v => v.Layout))];
             const availableSwitches = [...new Set(filteredVariations.map(v => v.SwitchType))];
             const availableColors = [...new Set(filteredVariations.map(v => v.Color))];
 
-                        updateOptionButtons('layout', availableLayouts);
+            updateOptionButtons('layout', availableLayouts);
             updateOptionButtons('switch', availableSwitches);
             updateOptionButtons('color', availableColors);
         }
@@ -379,31 +429,25 @@ $isLoggedIn = isset($_SESSION['user_id']);
             const buttons = document.querySelectorAll(`[data-type="${type}"]`);
             buttons.forEach(btn => {
                 const value = type === 'layout' ? parseInt(btn.dataset.value) : btn.dataset.value;
-                const isAvailable = availableValues.some(v => 
+                const isAvailable = availableValues.some(v =>
                     type === 'layout' ? v == value : v === value
                 );
-                
+
                 if (isAvailable) {
                     btn.classList.remove('disabled');
-                    btn.disabled = false;
                 } else {
                     btn.classList.add('disabled');
-                    btn.disabled = true;
-                                        if (selectedVariation[type] === btn.dataset.value) {
-                        selectedVariation[type] = null;
-                        btn.classList.remove('active');
-                    }
                 }
             });
         }
 
         function checkVariationComplete() {
-                        const hasLayout = selectedVariation.layout !== null;
+            const hasLayout = selectedVariation.layout !== null;
             const hasSwitch = selectedVariation.switch !== null;
             const hasColor = selectedVariation.color !== null;
 
-                        if (hasLayout && hasSwitch && hasColor) {
-                currentVariationData = allVariations.find(v => 
+            if (hasLayout && hasSwitch && hasColor) {
+                currentVariationData = allVariations.find(v =>
                     v.Layout == selectedVariation.layout &&
                     v.SwitchType === selectedVariation.switch &&
                     v.Color === selectedVariation.color
@@ -411,12 +455,15 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
                 if (currentVariationData) {
                     const stock = parseInt(currentVariationData.StockQuantity);
-                    
+
                     const topPriceStock = document.getElementById('topPriceStock');
                     if (topPriceStock) {
-                        topPriceStock.style.display = 'flex';
-                        document.getElementById('topStock').textContent = stock;
-                        document.getElementById('topPrice').textContent = '₱' + parseFloat(currentVariationData.Price).toLocaleString('en-PH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        topPriceStock.style.display = 'block';
+                        const stockDisplay = document.getElementById('topStock');
+                        if (stockDisplay) {
+                            stockDisplay.innerHTML = `<i class="fas fa-check-circle"></i> <span>${stock} in stock</span>`;
+                        }
+                        document.getElementById('topPrice').textContent = '₱' + parseFloat(currentVariationData.Price).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
 
                     const qtyInput = document.getElementById('quantity');
@@ -427,7 +474,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                         }
                     }
 
-                                        updateActionButtons(stock > 0);
+                    updateActionButtons(stock > 0);
                 } else {
                     resetVariationInfo();
                 }
@@ -448,7 +495,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
         function updateActionButtons(enabled) {
             const addToCartBtn = document.querySelector('.btn-add-cart');
             const buyNowBtn = document.querySelector('.btn-buy-now');
-            
+
             if (addToCartBtn && addToCartBtn.tagName === 'BUTTON') {
                 addToCartBtn.disabled = !enabled;
                 if (enabled) {
@@ -457,7 +504,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                     addToCartBtn.classList.add('disabled');
                 }
             }
-            
+
             if (buyNowBtn && buyNowBtn.tagName === 'BUTTON') {
                 buyNowBtn.disabled = !enabled;
                 if (enabled) {
@@ -472,7 +519,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImage');
             const mainImg = document.getElementById('mainImage');
-            
+
             if (mainImg) {
                 modal.style.display = 'flex';
                 modalImg.src = mainImg.src;
@@ -486,7 +533,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
             document.body.style.overflow = 'auto';
         }
 
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeModal();
             }
@@ -520,30 +567,96 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 alert('Please select all variation options (Layout, Switch, Color)');
                 return;
             }
-            
+
             if (currentVariationData.StockQuantity <= 0) {
                 alert('This variation is out of stock');
                 return;
             }
-            
-            const quantity = document.getElementById('quantity').value;
-            alert(`Adding to cart:\nLayout: ${selectedVariation.layout}%\nSwitch: ${selectedVariation.switch}\nColor: ${selectedVariation.color}\nQuantity: ${quantity}\nPrice: ₱${parseFloat(currentVariationData.Price).toFixed(2)}`);
+
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            const addToCartBtn = document.querySelector('.btn-add-cart');
+            if (addToCartBtn) {
+                addToCartBtn.disabled = true;
+            }
+
+            const formData = new FormData();
+            formData.append('product_id', productId);
+            formData.append('variation_id', currentVariationData.VariationID);
+            formData.append('quantity', quantity);
+
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert('Error: ' + data.message);
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to add item to cart. Please try again.');
+                })
+                .finally(() => {
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                    }
+                });
+        }
 
         function buyNow(productId) {
             if (!currentVariationData) {
                 alert('Please select all variation options (Layout, Switch, Color)');
                 return;
             }
-            
+
             if (currentVariationData.StockQuantity <= 0) {
                 alert('This variation is out of stock');
                 return;
             }
-            
-            const quantity = document.getElementById('quantity').value;
-            alert(`Buy now:\nLayout: ${selectedVariation.layout}%\nSwitch: ${selectedVariation.switch}\nColor: ${selectedVariation.color}\nQuantity: ${quantity}\nPrice: ₱${parseFloat(currentVariationData.Price).toFixed(2)}`);
+
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            const buyNowBtn = document.querySelector('.btn-buy-now');
+            if (buyNowBtn) {
+                buyNowBtn.disabled = true;
+                buyNowBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            }
+
+            const formData = new FormData();
+            formData.append('product_id', productId);
+            formData.append('variation_id', currentVariationData.VariationID);
+            formData.append('quantity', quantity);
+
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = 'checkout.php';
+                    } else {
+                        alert('Error: ' + data.message);
+                        if (buyNowBtn) {
+                            buyNowBtn.disabled = false;
+                            buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';
+                        }
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to process order. Please try again.');
+                    if (buyNowBtn) {
+                        buyNowBtn.disabled = false;
+                        buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';
+                    }
+                });
+        }
     </script>
 </body>
 
