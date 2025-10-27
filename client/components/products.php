@@ -101,7 +101,7 @@ if ($result && $result->num_rows > 0) {
                             <div class="product-price"><?php echo htmlspecialchars($product['price']); ?></div>
                             <div class="product-actions">
                                 <?php if ($isLoggedIn): ?>
-                                    <button class="btn-cart" onclick="event.stopPropagation(); addToCart(<?php echo $product['id']; ?>)">
+                                    <button class="btn-cart" onclick="event.stopPropagation(); window.location.href='product.php?id=<?php echo $product['id']; ?>'">
                                         <i class="fas fa-shopping-cart"></i> Add to Cart
                                     </button>
                                 <?php else: ?>

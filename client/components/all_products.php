@@ -3,6 +3,8 @@ require_once __DIR__ . '/../../conn.php';
 
 $isLoggedIn = isset($_SESSION['user_id']);
 
+$category = isset($_GET['category']) ? $_GET['category'] : '';
+
 $sql = "SELECT 
             p.ProductID,
             p.Brand,
@@ -15,13 +17,25 @@ $sql = "SELECT
             (SELECT MAX(Price) FROM ProductVariations WHERE ProductID = p.ProductID) as MaxPrice,
             GROUP_CONCAT(DISTINCT CONCAT(pv.Layout, '% | ', pv.SwitchType, ' | ', pv.Color) SEPARATOR '; ') as Variations
         FROM Products p
-        LEFT JOIN ProductVariations pv ON p.ProductID = pv.ProductID
-        GROUP BY p.ProductID
-        ORDER BY p.TotalSold DESC, p.ProductID DESC
-        LIMIT 8";
+        LEFT JOIN ProductVariations pv ON p.ProductID = pv.ProductID";
 
-$result = $conn->query($sql);
-$featured_products = [];
+if (!empty($category)) {
+    $sql .= " WHERE p.Category = ?";
+}
+
+$sql .= " GROUP BY p.ProductID
+          ORDER BY p.TotalSold DESC, p.ProductID DESC";
+
+if (!empty($category)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $category);
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    $result = $conn->query($sql);
+}
+
+$products = [];
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -29,7 +43,7 @@ if ($result && $result->num_rows > 0) {
         if ($imagePath && strpos($imagePath, 'mechakeys/') === 0) {
             $imagePath = substr($imagePath, strlen('mechakeys/'));
         }
-        
+
         $minPrice = floatval($row['MinPrice'] ?? 0);
         $maxPrice = floatval($row['MaxPrice'] ?? 0);
         $priceDisplay = '';
@@ -42,8 +56,8 @@ if ($result && $result->num_rows > 0) {
         } else {
             $priceDisplay = 'Price not available';
         }
-        
-        $featured_products[] = [
+
+        $products[] = [
             'id' => $row['ProductID'],
             'name' => $row['Brand'] . ' ' . $row['Model'],
             'description' => $row['Description'],
@@ -55,11 +69,25 @@ if ($result && $result->num_rows > 0) {
         ];
     }
 }
+
+$categoryTitle = 'All Products';
+if (!empty($category)) {
+    $categoryTitle = ucfirst($category);
+    if ($category == 'keyboard') {
+        $categoryTitle = 'Keyboards';
+    } elseif ($category == 'switches') {
+        $categoryTitle = 'Switches';
+    } elseif ($category == 'keycaps') {
+        $categoryTitle = 'Keycaps';
+    } elseif ($category == 'accessories') {
+        $categoryTitle = 'Accessories';
+    }
+}
 ?>
 
 <section class="section">
     <h2 class="section-title">
-        Popular Products
+        <?php echo htmlspecialchars($categoryTitle); ?>
     </h2>
 
     <?php if (!$isLoggedIn): ?>
@@ -72,14 +100,24 @@ if ($result && $result->num_rows > 0) {
     <?php endif; ?>
 
     <div class="products-grid">
-        <?php if (empty($featured_products)): ?>
-            <p style="text-align: center; width: 100%; padding: 2rem;">No products available at the moment.</p>
+        <?php if (empty($products)): ?>
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <i class="fas fa-box-open"></i>
+                <h3>No products found</h3>
+                <p>There are currently no products in this category.</p>
+                <a href="index.php" class="btn-view-all">
+                    View All Products
+                </a>
+            </div>
         <?php else: ?>
-            <?php foreach ($featured_products as $product): ?>
-                <div class="product-card" onclick="window.location.href='product.php?id=<?php echo $product['id']; ?>'" style="cursor: pointer;">
+            <?php foreach ($products as $product): ?>
+                <div class="product-card" onclick="window.location.href='product.php?id=<?php echo $product['id']; ?>'"
+                    style="cursor: pointer;">
                     <div class="product-image">
                         <?php if ($product['image']): ?>
-                            <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <img src="<?php echo htmlspecialchars($product['image']); ?>"
+                                alt="<?php echo htmlspecialchars($product['name']); ?>"
+                                style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
                             <span style="font-size: 4rem;">⌨️</span>
                         <?php endif; ?>
@@ -94,17 +132,20 @@ if ($result && $result->num_rows > 0) {
                             <?php endif; ?>
                         </div>
                         <div class="product-specs">
-                            </i> <?php echo htmlspecialchars($product['specs']); ?>
+                            <?php echo htmlspecialchars($product['specs']); ?>
                         </div>
                         <div class="product-footer">
                             <div class="product-price"><?php echo htmlspecialchars($product['price']); ?></div>
                             <div class="product-actions">
                                 <?php if ($isLoggedIn): ?>
-                                    <button class="btn-cart" onclick="event.stopPropagation(); window.location.href='product.php?id=<?php echo $product['id']; ?>'" title="Add to Cart">
+                                    <button class="btn-cart"
+                                        onclick="event.stopPropagation(); window.location.href='product.php?id=<?php echo $product['id']; ?>'"
+                                        title="Add to Cart">
                                         <i class="fas fa-shopping-cart"></i>
                                     </button>
                                 <?php else: ?>
-                                    <button class="btn-cart disabled" disabled title="Login to add to cart" onclick="event.stopPropagation();">
+                                    <button class="btn-cart disabled" disabled title="Login to add to cart"
+                                        onclick="event.stopPropagation();">
                                         <i class="fas fa-lock"></i>
                                     </button>
                                 <?php endif; ?>
