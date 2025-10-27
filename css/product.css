@@ -167,25 +167,51 @@
 
 /* Top Price and Stock Display */
 .top-price-stock {
-    display: flex;
-    align-items: baseline;
     margin-bottom: 24px;
 }
 
-.stock-display {
-    font-size: 16px;
-    color: var(--text-light);
-    font-weight: 400;
+.price-stock-card {
+    background: var(--card-bg);
+    border: 1px solid #E0E0E0;
+    border-radius: 16px;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
 }
 
-.stock-display span {
+.price-section, .stock-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.price-label, .stock-label {
+    font-size: 12px;
     font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .price-display {
     font-size: 32px;
     font-weight: 700;
-    color: var(--text-light);
+    color: var(--primary);
+    line-height: 1;
+}
+
+.stock-display {
+    font-size: 16px;
+    font-weight: 600;
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stock-display i {
+    font-size: 18px;
 }
 
 .product-price-section {
@@ -299,10 +325,11 @@
     text-align: center;
 }
 
-.variation-option-btn:hover:not(.disabled) {
-    border-color: var(--primary);
-    background: rgba(30, 30, 30, 0.05);
+.variation-option-btn:hover:not(.disabled):not(.active) {
+    border-color: #9ca3af;
+    background: linear-gradient(135deg, rgba(156, 163, 175, 0.1) 0%, rgba(156, 163, 175, 0.05) 100%);
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .variation-option-btn.active {
@@ -313,7 +340,7 @@
 
 .variation-option-btn.disabled {
     opacity: 0.4;
-    cursor: not-allowed;
+    cursor: pointer;
     background: #f5f5f5;
     color: #9ca3af;
 }
