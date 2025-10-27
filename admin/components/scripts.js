@@ -31,6 +31,8 @@ function showSection(sectionId) {
         loadProducts();
     } else if (sectionId === 'inventory') {
         loadInventory();
+    } else if (sectionId === 'orders') {
+        loadOrders();
     }
 }
 
@@ -518,7 +520,6 @@ async function deleteProduct(productId) {
         const result = await response.json();
 
         if (result.success) {
-            alert(result.message);
             loadDashboard();
             loadProducts();
             loadInventory();
@@ -690,3 +691,341 @@ window.onclick = function (event) {
         event.target.classList.remove('active');
     }
 }
+
+
+let deliveryRiders = [];
+
+async function loadOrders(status = 'all') {
+    try {
+        const response = await fetch(`get_orders.php?status=${status}`);
+        const result = await response.json();
+
+        if (result.success) {
+            document.getElementById('pendingOrdersCount').textContent = result.stats.pending || 0;
+            document.getElementById('assignedOrdersCount').textContent = result.stats.assigned || 0;
+            document.getElementById('shippedOrdersCount').textContent = result.stats.shipped || 0;
+            document.getElementById('deliveredOrdersCount').textContent = result.stats.delivered || 0;
+
+            deliveryRiders = result.riders;
+
+            const tbody = document.getElementById('ordersTableBody');
+            if (result.orders && result.orders.length > 0) {
+                tbody.innerHTML = result.orders.map(order => {
+                    const statusClass = getStatusClass(order.DeliveryStatus);
+                    const paymentClass = order.PaymentStatus === 'Paid' ? 'success' :
+                        order.PaymentStatus === 'Failed' ? 'error' : 'warning';
+
+                    return `
+                        <tr>
+                            <td>#${String(order.OrderID).padStart(6, '0')}</td>
+                            <td>
+                                <div>
+                                    <strong>${order.CustomerName}</strong><br>
+                                    <small style="color: #666;">${order.CustomerEmail}</small>
+                                </div>
+                            </td>
+                            <td>${order.ItemCount} item(s)</td>
+                            <td>₱${parseFloat(order.TotalAmount).toFixed(2)}</td>
+                            <td><span class="badge ${paymentClass}">${order.PaymentStatus}</span></td>
+                            <td><span class="badge ${statusClass}">${order.DeliveryStatus}</span></td>
+                            <td>
+                                ${order.DeliveryPersonName ?
+                            `<strong>${order.DeliveryPersonName}</strong>` :
+                            '<span style="color: #999;">Not Assigned</span>'}
+                            </td>
+                            <td>${new Date(order.PlaceOrdered).toLocaleDateString()}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon btn-view" onclick="viewOrderDetails(${order.OrderID})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    ${!order.DeliveryPersonID ? `
+                                        <button class="btn-icon btn-assign" onclick="openAssignDelivery(${order.OrderID}, ${order.TrackingID})" title="Assign Rider">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn-icon btn-edit" onclick="openUpdateStatus(${order.OrderID}, ${order.TrackingID})" title="Assign Delivery">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No orders found</td></tr>';
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load orders:', error);
+        document.getElementById('ordersTableBody').innerHTML =
+            '<tr><td colspan="9" class="text-center" style="color: red;">Failed to load orders</td></tr>';
+    }
+}
+
+function getStatusClass(status) {
+    const statusMap = {
+        'Processing': 'warning',
+        'Assigned': 'info',
+        'Shipped': 'primary',
+        'In Transit': 'primary',
+        'Delivered': 'success',
+        'Cancelled': 'error'
+    };
+    return statusMap[status] || 'default';
+}
+
+function filterOrders() {
+    const status = document.getElementById('orderStatusFilter').value;
+    loadOrders(status);
+}
+
+function refreshOrders() {
+    const status = document.getElementById('orderStatusFilter').value;
+    loadOrders(status);
+}
+
+async function viewOrderDetails(orderId) {
+    const modal = document.getElementById('orderDetailsModal');
+    const modalBody = document.getElementById('orderDetailsBody');
+
+    modal.style.display = 'flex';
+    modalBody.innerHTML = '<div class="loading text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+
+    try {
+        const response = await fetch(`get_order_details.php?order_id=${orderId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const order = result.order;
+            const items = result.items;
+
+            const itemsHtml = items.map(item => `
+                <div class="order-item-row">
+                    <img src="/${item.ImagePath || 'products/placeholder.png'}" 
+                         alt="${item.Brand} ${item.Model}" 
+                         class="order-item-image"
+                         onerror="this.src='/products/placeholder.png'">
+                    <div class="order-item-info">
+                        <div class="order-item-name">${item.Brand} ${item.Model}</div>
+                        <div class="order-item-specs">
+                            ${item.Layout}% • ${item.SwitchType} • ${item.Color} • Qty: ${item.Quantity}
+                        </div>
+                    </div>
+                    <div class="order-item-price">₱${parseFloat(item.SubTotal).toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            modalBody.innerHTML = `
+                <div class="order-details-grid">
+                    <div class="detail-box">
+                        <label>Order Number</label>
+                        <div class="value">#${String(order.OrderID).padStart(6, '0')}</div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Order Date</label>
+                        <div class="value">${new Date(order.PlaceOrdered).toLocaleDateString()}</div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Customer</label>
+                        <div class="value">${order.CustomerName}</div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Contact</label>
+                        <div class="value">${order.CustomerContact || 'N/A'}</div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Email</label>
+                        <div class="value">${order.CustomerEmail}</div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Delivery Status</label>
+                        <div class="value">
+                            <span class="badge ${getStatusClass(order.DeliveryStatus)}">${order.DeliveryStatus}</span>
+                        </div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Payment Status</label>
+                        <div class="value">
+                            <span class="badge ${order.PaymentStatus === 'Paid' ? 'success' : 'warning'}">${order.PaymentStatus}</span>
+                        </div>
+                    </div>
+                    <div class="detail-box">
+                        <label>Delivery Rider</label>
+                        <div class="value">${order.DeliveryPersonName || 'Not Assigned'}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 15px;"><i class="fas fa-map-marker-alt"></i> Delivery Address</h4>
+                    <div class="detail-box">
+                        <div class="value">${order.CustomerAddress}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 15px;"><i class="fas fa-truck"></i> Delivery Information</h4>
+                    <div class="order-details-grid">
+                        <div class="detail-box">
+                            <label>Assigned Rider</label>
+                            <div class="value">${order.DeliveryPersonName || '<span style="color: #999;">Not Assigned</span>'}</div>
+                        </div>
+                        <div class="detail-box">
+                            <label>Rider Contact</label>
+                            <div class="value">${order.DeliveryPersonContact || '<span style="color: #999;">N/A</span>'}</div>
+                        </div>
+                        <div class="detail-box">
+                            <label>Delivery Status</label>
+                            <div class="value"><span style="color: #667eea; font-weight: 600;">${order.DeliveryStatus}</span></div>
+                        </div>
+                        <div class="detail-box">
+                            <label>Last Updated</label>
+                            <div class="value">${new Date(order.LastUpdated).toLocaleString()}</div>
+                        </div>
+                        <div class="detail-box">
+                            <label>Delivery Area</label>
+                            <div class="value"><span style="color: #667eea; font-weight: 600;">Laoag City</span></div>
+                        </div>
+                        <div class="detail-box">
+                            <label>Delivery Type</label>
+                            <div class="value"><span style="color: #43e97b; font-weight: 600;">In-House / Same Day</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="margin-bottom: 15px;"><i class="fas fa-box"></i> Order Items</h4>
+                    <div class="order-items-list">
+                        ${itemsHtml}
+                    </div>
+                </div>
+                
+                <div class="order-total">
+                    <span>Total Amount</span>
+                    <span>₱${parseFloat(order.TotalAmount).toFixed(2)}</span>
+                </div>
+            `;
+        } else {
+            modalBody.innerHTML = `<div class="alert error">${result.message}</div>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        modalBody.innerHTML = '<div class="alert error">Failed to load order details</div>';
+    }
+}
+
+function closeOrderDetailsModal() {
+    document.getElementById('orderDetailsModal').style.display = 'none';
+}
+
+function openAssignDelivery(orderId, trackingId) {
+    document.getElementById('assignOrderId').value = orderId;
+    document.getElementById('assignTrackingId').value = trackingId;
+
+    const select = document.getElementById('deliveryRider');
+    select.innerHTML = '<option value="">-- Select Rider --</option>' +
+        deliveryRiders.map(rider =>
+            `<option value="${rider.ID}">${rider.FullName} - ${rider.Contact}</option>`
+        ).join('');
+
+    document.getElementById('assignDeliveryModal').style.display = 'flex';
+}
+
+function closeAssignDeliveryModal() {
+    document.getElementById('assignDeliveryModal').style.display = 'none';
+    document.getElementById('assignDeliveryForm').reset();
+}
+
+async function submitAssignDelivery(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    try {
+        const response = await fetch('assign_delivery.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeAssignDeliveryModal();
+            refreshOrders();
+        } else {
+            console.error('Error:', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function openUpdateStatus(orderId, trackingId) {
+    document.getElementById('updateOrderId').value = orderId;
+    document.getElementById('updateTrackingId').value = trackingId;
+
+    await loadDeliveryPersonsForUpdate();
+
+    document.getElementById('updateStatusModal').style.display = 'flex';
+}
+
+async function loadDeliveryPersonsForUpdate() {
+    try {
+        const response = await fetch('get_delivery_riders.php');
+        const riders = await response.json();
+
+        const select = document.getElementById('updateDeliveryPerson');
+        select.innerHTML = '<option value="">-- Select Delivery Person --</option>';
+
+        riders.forEach(rider => {
+            const option = document.createElement('option');
+            option.value = rider.ID;
+            option.textContent = `${rider.FullName} (${rider.Contact})`;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading delivery persons:', error);
+    }
+}
+
+function closeUpdateStatusModal() {
+    document.getElementById('updateStatusModal').style.display = 'none';
+    document.getElementById('updateStatusForm').reset();
+}
+
+async function submitUpdateStatus(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    try {
+        const response = await fetch('update_order_status.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeUpdateStatusModal();
+            refreshOrders();
+        } else {
+            console.error('Error:', result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+window.addEventListener('click', function (event) {
+    if (event.target.id === 'orderDetailsModal') {
+        closeOrderDetailsModal();
+    }
+    if (event.target.id === 'assignDeliveryModal') {
+        closeAssignDeliveryModal();
+    }
+    if (event.target.id === 'updateStatusModal') {
+        closeUpdateStatusModal();
+    }
+});
+
