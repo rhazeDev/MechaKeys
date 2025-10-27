@@ -12,6 +12,10 @@
                 <i class="fas fa-chart-line"></i>
                 <span>Dashboard</span>
             </a>
+            <a href="#" class="nav-item" data-section="orders">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
             <a href="#" class="nav-item" data-section="products">
                 <i class="fas fa-box"></i>
                 <span>Products</span>
