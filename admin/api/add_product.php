@@ -11,14 +11,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        if (empty($_POST['brand']) || empty($_POST['model']) || empty($_POST['category']) || empty($_POST['description'])) {
+        if (empty($_POST['model']) || empty($_POST['category']) || empty($_POST['description'])) {
             echo json_encode(['success' => false, 'message' => 'All fields are required']);
             exit;
         }
 
-        $brand = $conn->real_escape_string($_POST['brand']);
-        $model = $conn->real_escape_string($_POST['model']);
         $category = $conn->real_escape_string($_POST['category']);
+        if ($category === 'keyboard' && empty($_POST['brand'])) {
+            echo json_encode(['success' => false, 'message' => 'Brand is required for keyboard products']);
+            exit;
+        }
+
+        $brand = !empty($_POST['brand']) ? $conn->real_escape_string($_POST['brand']) : 'N/A';
+        $model = $conn->real_escape_string($_POST['model']);
         $description = $conn->real_escape_string($_POST['description']);
 
         if (!isset($_POST['variations']) || empty($_POST['variations'])) {
@@ -76,9 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         foreach ($_POST['variations'] as $variation) {
-            $layout = isset($variation['layout']) ? $conn->real_escape_string($variation['layout']) : '';
-            $switch_type = $conn->real_escape_string($variation['switch']);
-            $color = $conn->real_escape_string($variation['color']);
+            $layout = isset($variation['layout']) ? $conn->real_escape_string($variation['layout']) : 'N/A';
+            $switch_type = isset($variation['switch']) ? $conn->real_escape_string($variation['switch']) : 'N/A';
+            $color = isset($variation['color']) ? $conn->real_escape_string($variation['color']) : 'N/A';
             $price = floatval($variation['price']);
             $stock = intval($variation['stock']);
 
