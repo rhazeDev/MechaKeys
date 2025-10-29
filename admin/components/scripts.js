@@ -1,3 +1,19 @@
+function showCustomConfirm(message, onOk) {
+    const dialog = document.getElementById('customConfirmDialog');
+    document.getElementById('confirmDialogMessage').innerHTML = message;
+    dialog.style.display = 'flex';
+    const okBtn = document.getElementById('confirmDialogOkBtn');
+    function okHandler() {
+        dialog.style.display = 'none';
+        okBtn.removeEventListener('click', okHandler);
+        onOk();
+    }
+    okBtn.addEventListener('click', okHandler);
+}
+
+function closeCustomConfirm() {
+    document.getElementById('customConfirmDialog').style.display = 'none';
+}
 let variationCount = 1;
 
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -57,6 +73,51 @@ document.addEventListener('change', function (e) {
             }
         }
     }
+
+    if (e.target.id === 'categorySelect') {
+        const brandFieldGroup = document.getElementById('brandFieldGroup');
+        const brandSelect = document.getElementById('brandSelect');
+        const keyboardOnlyFields = document.querySelectorAll('.keyboard-only-field');
+
+        if (e.target.value === 'keyboard') {
+            brandFieldGroup.style.display = '';
+            brandSelect.required = true;
+
+            keyboardOnlyFields.forEach(field => {
+                field.style.display = '';
+                const inputs = field.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (!input.classList.contains('custom-layout-group')) {
+                        input.required = true;
+                    }
+                });
+            });
+        } else if (e.target.value) {
+            brandFieldGroup.style.display = 'none';
+            brandSelect.required = false;
+            brandSelect.value = '';
+
+            keyboardOnlyFields.forEach(field => {
+                field.style.display = 'none';
+                const inputs = field.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.required = false;
+                    if (input.tagName === 'SELECT') {
+                        input.value = '';
+                    } else if (input.type === 'text') {
+                        input.value = '';
+                    }
+                });
+            });
+        } else {
+            brandFieldGroup.style.display = '';
+            brandSelect.required = true;
+
+            keyboardOnlyFields.forEach(field => {
+                field.style.display = '';
+            });
+        }
+    }
 });
 
 document.getElementById('productImages').addEventListener('change', function (e) {
@@ -92,12 +153,15 @@ function removeImage(index) {
 
 function addVariation() {
     const container = document.getElementById('variationsContainer');
+    const categorySelect = document.getElementById('categorySelect');
+    const isKeyboard = categorySelect.value === 'keyboard';
+
     const div = document.createElement('div');
     div.className = 'variation-item';
     div.innerHTML = `
-        <div class="form-group">
+        <div class="form-group keyboard-only-field" ${!isKeyboard ? 'style="display: none;"' : ''}>
             <label class="form-label">Layout <span class="required">*</span></label>
-            <select name="variations[${variationCount}][layout]" class="form-select layout-select" data-index="${variationCount}" required>
+            <select name="variations[${variationCount}][layout]" class="form-select layout-select" data-index="${variationCount}" ${isKeyboard ? 'required' : ''}>
                 <option value="">Select layout</option>
                 <option value="100">100% (Full Size)</option>
                 <option value="96">96%</option>
@@ -109,17 +173,17 @@ function addVariation() {
                 <option value="custom">Custom (Type below)</option>
             </select>
         </div>
-        <div class="form-group custom-layout-group" id="customLayout${variationCount}" style="display: none;">
+        <div class="form-group custom-layout-group keyboard-only-field" id="customLayout${variationCount}" style="display: none;">
             <label class="form-label">Custom Layout</label>
             <input type="text" name="variations[${variationCount}][custom_layout]" class="form-input" placeholder="e.g., 1800, 68%">
         </div>
-        <div class="form-group">
+        <div class="form-group keyboard-only-field" ${!isKeyboard ? 'style="display: none;"' : ''}>
             <label class="form-label">Switch Type</label>
-            <input type="text" name="variations[${variationCount}][switch]" class="form-input" placeholder="e.g., Reaper SW, Cherry MX Red" required>
+            <input type="text" name="variations[${variationCount}][switch]" class="form-input" placeholder="e.g., Reaper SW, Cherry MX Red" ${isKeyboard ? 'required' : ''}>
         </div>
-        <div class="form-group">
+        <div class="form-group keyboard-only-field" ${!isKeyboard ? 'style="display: none;"' : ''}>
             <label class="form-label">Color</label>
-            <input type="text" name="variations[${variationCount}][color]" class="form-input" placeholder="e.g., Blue, Black" required>
+            <input type="text" name="variations[${variationCount}][color]" class="form-input" placeholder="e.g., Blue, Black" ${isKeyboard ? 'required' : ''}>
         </div>
         <div class="form-group">
             <label class="form-label">Price (₱)</label>
@@ -504,31 +568,35 @@ function closeModal(modalId) {
 }
 
 async function deleteProduct(productId) {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
-        return;
-    }
+    showConfirm(
+        'Are you sure you want to delete this product? This action cannot be undone.',
+        async () => {
+            try {
+                const response = await fetch('api/delete_product.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ product_id: productId })
+                });
 
-    try {
-        const response = await fetch('api/delete_product.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ product_id: productId })
-        });
+                const result = await response.json();
 
-        const result = await response.json();
-
-        if (result.success) {
-            loadDashboard();
-            loadProducts();
-            loadInventory();
-        } else {
-            alert(result.message);
-        }
-    } catch (error) {
-        alert('An error occurred. Please try again.');
-    }
+                if (result.success) {
+                    showToast('Product deleted successfully', 'success', 'Deleted');
+                    loadDashboard();
+                    loadProducts();
+                    loadInventory();
+                } else {
+                    showError(result.message, 'Delete Failed');
+                }
+            } catch (error) {
+                showError('An error occurred. Please try again.', 'Error');
+            }
+        },
+        null,
+        'Delete Product'
+    );
 }
 
 let editVariationCounter = 0;
@@ -557,10 +625,10 @@ async function editProduct(productId) {
 
             document.getElementById('editProductModal').classList.add('active');
         } else {
-            alert(result.message);
+            showError(result.message, 'Load Failed');
         }
     } catch (error) {
-        alert('Failed to load product details');
+        showError('Failed to load product details', 'Error');
     }
 }
 
@@ -739,14 +807,11 @@ async function loadOrders(status = 'all') {
                                     <button class="btn-icon btn-view" onclick="viewOrderDetails(${order.OrderID})" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    ${!order.DeliveryPersonID ? `
+                                    ${!order.DeliveryPersonID && order.DeliveryStatus !== 'Pending' && order.DeliveryStatus !== 'Cancelled' ? `
                                         <button class="btn-icon btn-assign" onclick="openAssignDelivery(${order.OrderID}, ${order.TrackingID})" title="Assign Rider">
                                             <i class="fas fa-user-plus"></i>
                                         </button>
                                     ` : ''}
-                                    <button class="btn-icon btn-edit" onclick="openUpdateStatus(${order.OrderID}, ${order.TrackingID})" title="Assign Delivery">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -765,8 +830,8 @@ async function loadOrders(status = 'all') {
 
 function getStatusClass(status) {
     const statusMap = {
-        'Processing': 'warning',
-        'Assigned': 'info',
+        'Pending': 'warning',
+        'Processing': 'info', 'Assigned': 'primary',
         'Shipped': 'primary',
         'In Transit': 'primary',
         'Delivered': 'success',
@@ -788,9 +853,11 @@ function refreshOrders() {
 async function viewOrderDetails(orderId) {
     const modal = document.getElementById('orderDetailsModal');
     const modalBody = document.getElementById('orderDetailsBody');
+    const modalFooter = document.getElementById('orderDetailsFooter');
 
     modal.style.display = 'flex';
     modalBody.innerHTML = '<div class="loading text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    modalFooter.style.display = 'none';
 
     try {
         const response = await fetch(`api/get_order_details.php?order_id=${orderId}`);
@@ -831,14 +898,6 @@ async function viewOrderDetails(orderId) {
                         <div class="value">${order.CustomerName}</div>
                     </div>
                     <div class="detail-box">
-                        <label>Contact</label>
-                        <div class="value">${order.CustomerContact || 'N/A'}</div>
-                    </div>
-                    <div class="detail-box">
-                        <label>Email</label>
-                        <div class="value">${order.CustomerEmail}</div>
-                    </div>
-                    <div class="detail-box">
                         <label>Delivery Status</label>
                         <div class="value">
                             <span class="badge ${getStatusClass(order.DeliveryStatus)}">${order.DeliveryStatus}</span>
@@ -855,56 +914,43 @@ async function viewOrderDetails(orderId) {
                         <div class="value">${order.DeliveryPersonName || 'Not Assigned'}</div>
                     </div>
                 </div>
-                
                 <div style="margin-top: 20px;">
                     <h4 style="margin-bottom: 15px;"><i class="fas fa-map-marker-alt"></i> Delivery Address</h4>
                     <div class="detail-box">
                         <div class="value">${order.CustomerAddress}</div>
                     </div>
                 </div>
-                
-                <div style="margin-top: 20px;">
-                    <h4 style="margin-bottom: 15px;"><i class="fas fa-truck"></i> Delivery Information</h4>
-                    <div class="order-details-grid">
-                        <div class="detail-box">
-                            <label>Assigned Rider</label>
-                            <div class="value">${order.DeliveryPersonName || '<span style="color: #999;">Not Assigned</span>'}</div>
-                        </div>
-                        <div class="detail-box">
-                            <label>Rider Contact</label>
-                            <div class="value">${order.DeliveryPersonContact || '<span style="color: #999;">N/A</span>'}</div>
-                        </div>
-                        <div class="detail-box">
-                            <label>Delivery Status</label>
-                            <div class="value"><span style="color: #667eea; font-weight: 600;">${order.DeliveryStatus}</span></div>
-                        </div>
-                        <div class="detail-box">
-                            <label>Last Updated</label>
-                            <div class="value">${new Date(order.LastUpdated).toLocaleString()}</div>
-                        </div>
-                        <div class="detail-box">
-                            <label>Delivery Area</label>
-                            <div class="value"><span style="color: #667eea; font-weight: 600;">Laoag City</span></div>
-                        </div>
-                        <div class="detail-box">
-                            <label>Delivery Type</label>
-                            <div class="value"><span style="color: #43e97b; font-weight: 600;">In-House / Same Day</span></div>
-                        </div>
-                    </div>
-                </div>
-                
                 <div style="margin-top: 20px;">
                     <h4 style="margin-bottom: 15px;"><i class="fas fa-box"></i> Order Items</h4>
                     <div class="order-items-list">
                         ${itemsHtml}
                     </div>
                 </div>
-                
                 <div class="order-total">
                     <span>Total Amount</span>
                     <span>₱${parseFloat(order.TotalAmount).toFixed(2)}</span>
                 </div>
             `;
+
+            if (order.DeliveryStatus === 'Pending') {
+                modalFooter.style.display = 'flex';
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" onclick="closeOrderDetailsModal()">Close</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn btn-danger" onclick="handleOrderAction(${order.OrderID}, ${order.TrackingID}, 'cancel')">
+                            <i class="fas fa-times"></i> Cancel Order
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="handleOrderAction(${order.OrderID}, ${order.TrackingID}, 'approve')">
+                            <i class="fas fa-check"></i> Approve Order
+                        </button>
+                    </div>
+                `;
+            } else {
+                modalFooter.style.display = 'flex';
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" onclick="closeOrderDetailsModal()">Close</button>
+                `;
+            }
         } else {
             modalBody.innerHTML = `<div class="alert error">${result.message}</div>`;
         }
@@ -916,6 +962,47 @@ async function viewOrderDetails(orderId) {
 
 function closeOrderDetailsModal() {
     document.getElementById('orderDetailsModal').style.display = 'none';
+    document.getElementById('orderDetailsFooter').style.display = 'none';
+}
+
+async function handleOrderAction(orderId, trackingId, action) {
+    const actionText = action === 'approve' ? 'approve' : 'cancel';
+    const confirmMessage = action === 'approve'
+        ? 'Are you sure you want to approve this order? The order status will be set to <span style="color:#2196F3;font-weight:600;">Processing</span>.'
+        : 'Are you sure you want to cancel this order? Stock quantities will be restored.';
+
+    showCustomConfirm(confirmMessage, async () => {
+        const modalFooter = document.getElementById('orderDetailsFooter');
+        const originalFooterContent = modalFooter.innerHTML;
+        modalFooter.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Processing...</div>';
+
+        try {
+            const formData = new FormData();
+            formData.append('order_id', orderId);
+            formData.append('tracking_id', trackingId);
+            formData.append('action', action);
+
+            const response = await fetch('api/approve_cancel_order.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast(result.message, 'success', action === 'approve' ? 'Approved' : 'Cancelled');
+                closeOrderDetailsModal();
+                refreshOrders();
+            } else {
+                showError(result.message || `Failed to ${actionText} order`, 'Action Failed');
+                modalFooter.innerHTML = originalFooterContent;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError(`An error occurred while trying to ${actionText} the order`, 'Error');
+            modalFooter.innerHTML = originalFooterContent;
+        }
+    });
 }
 
 function openAssignDelivery(orderId, trackingId) {
@@ -960,72 +1047,12 @@ async function submitAssignDelivery(event) {
     }
 }
 
-async function openUpdateStatus(orderId, trackingId) {
-    document.getElementById('updateOrderId').value = orderId;
-    document.getElementById('updateTrackingId').value = trackingId;
-
-    await loadDeliveryPersonsForUpdate();
-
-    document.getElementById('updateStatusModal').style.display = 'flex';
-}
-
-async function loadDeliveryPersonsForUpdate() {
-    try {
-        const response = await fetch('api/get_delivery_riders.php');
-        const riders = await response.json();
-
-        const select = document.getElementById('updateDeliveryPerson');
-        select.innerHTML = '<option value="">-- Select Delivery Person --</option>';
-
-        riders.forEach(rider => {
-            const option = document.createElement('option');
-            option.value = rider.ID;
-            option.textContent = `${rider.FullName} (${rider.Contact})`;
-            select.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading delivery persons:', error);
-    }
-}
-
-function closeUpdateStatusModal() {
-    document.getElementById('updateStatusModal').style.display = 'none';
-    document.getElementById('updateStatusForm').reset();
-}
-
-async function submitUpdateStatus(event) {
-    event.preventDefault();
-
-    const formData = new FormData(event.target);
-
-    try {
-        const response = await fetch('api/update_order_status.php', {
-            method: 'POST',
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            closeUpdateStatusModal();
-            refreshOrders();
-        } else {
-            console.error('Error:', result.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
 window.addEventListener('click', function (event) {
     if (event.target.id === 'orderDetailsModal') {
         closeOrderDetailsModal();
     }
     if (event.target.id === 'assignDeliveryModal') {
         closeAssignDeliveryModal();
-    }
-    if (event.target.id === 'updateStatusModal') {
-        closeUpdateStatusModal();
     }
 });
 
