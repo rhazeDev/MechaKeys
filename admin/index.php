@@ -32,6 +32,7 @@ $total_revenue = $conn->query("SELECT SUM(TotalAmount) as total FROM orders o JO
     <title>Admin Dashboard - MechaKeys</title>
     <link rel="stylesheet" href="../css/admin.css">
     <link rel="stylesheet" href="../css/admin-orders.css">
+    <link rel="stylesheet" href="../css/alert.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -56,6 +57,7 @@ $total_revenue = $conn->query("SELECT SUM(TotalAmount) as total FROM orders o JO
 
     <?php include 'components/modals.php'; ?>
 
+    <script src="../js/alert.js"></script>
     <script src="components/scripts.js"></script>
 </body>
 
