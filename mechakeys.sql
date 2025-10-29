@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 27, 2025 at 01:29 PM
+-- Generation Time: Oct 28, 2025 at 06:48 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -76,7 +76,17 @@ INSERT INTO `notifications` (`NotificationID`, `CustomerID`, `Title`, `Message`,
 (2, 4, 'Order Placed Successfully', 'Your order #2 has been placed successfully. Total: ₱2,999.00', 'order', 'unread', '2025-10-26 21:48:48'),
 (3, 4, 'Order Placed Successfully', 'Your order #3 has been placed successfully. Total: ₱3,000.00', 'order', 'unread', '2025-10-26 22:03:53'),
 (4, 4, 'Delivery Rider Assigned', 'Your order #3 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-26 22:38:14'),
-(5, 4, 'Delivery Rider Assigned', 'Your order #2 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-26 22:41:02');
+(5, 4, 'Delivery Rider Assigned', 'Your order #2 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-26 22:41:02'),
+(6, 5, 'Order Placed Successfully', 'Your order #4 has been placed successfully. Total: ₱8,997.00', 'order', 'unread', '2025-10-28 08:10:26'),
+(7, 1, 'Order Placed Successfully', 'Your order #5 has been placed successfully. Total: ₱29,597.00', 'order', 'unread', '2025-10-28 08:16:35'),
+(8, 5, 'Order Placed Successfully', 'Your order #6 has been placed successfully. Total: ₱5,999.00', 'order', 'unread', '2025-10-28 09:33:35'),
+(9, 6, 'Order Placed Successfully', 'Your order #7 has been placed successfully. Total: ₱2,999.00', 'order', 'unread', '2025-10-28 09:36:13'),
+(10, 1, 'Order Placed Successfully', 'Your order #8 has been placed successfully. Total: ₱10,199.00', 'order', 'unread', '2025-10-28 09:57:21'),
+(11, 1, 'Delivery Rider Assigned', 'Your order #8 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-28 10:09:00'),
+(12, 1, 'Delivery Rider Assigned', 'Your order #8 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-28 10:13:08'),
+(13, 1, 'Delivery Rider Assigned', 'Your order #8 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-28 10:13:34'),
+(14, 1, 'Delivery Rider Assigned', 'Your order #8 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-28 10:15:02'),
+(15, 1, 'Delivery Rider Assigned', 'Your order #8 has been assigned to Justine Delivery for delivery. Status: Assigned', 'order', 'unread', '2025-10-28 10:23:51');
 
 -- --------------------------------------------------------
 
@@ -102,7 +112,19 @@ INSERT INTO `orderitems` (`OrderItemID`, `OrderID`, `ProductID`, `Quantity`, `Su
 (3, 1, 3, 1, 2999.00),
 (4, 1, 3, 1, 2999.00),
 (5, 2, 3, 1, 2999.00),
-(6, 3, 3, 1, 3000.00);
+(6, 3, 3, 1, 3000.00),
+(7, 4, 3, 3, 8997.00),
+(8, 5, 5, 2, 8400.00),
+(9, 5, 5, 2, 9200.00),
+(10, 5, 3, 1, 2999.00),
+(11, 5, 3, 1, 3000.00),
+(12, 5, 3, 2, 5998.00),
+(13, 6, 3, 1, 2999.00),
+(14, 6, 3, 1, 3000.00),
+(15, 7, 3, 1, 2999.00),
+(16, 8, 3, 1, 2999.00),
+(17, 8, 3, 1, 3000.00),
+(18, 8, 5, 1, 4200.00);
 
 -- --------------------------------------------------------
 
@@ -126,7 +148,12 @@ CREATE TABLE `orders` (
 INSERT INTO `orders` (`OrderID`, `CustomerID`, `TrackingID`, `PaymentID`, `TotalAmount`, `PlaceOrdered`) VALUES
 (1, 1, 4, 5, 18998.00, '2025-10-26 21:17:14'),
 (2, 4, 5, 6, 2999.00, '2025-10-26 21:48:48'),
-(3, 4, 6, 7, 3000.00, '2025-10-26 22:03:53');
+(3, 4, 6, 7, 3000.00, '2025-10-26 22:03:53'),
+(4, 5, 7, 8, 8997.00, '2025-10-28 08:10:26'),
+(5, 1, 8, 9, 29597.00, '2025-10-28 08:16:35'),
+(6, 5, 9, 10, 5999.00, '2025-10-28 09:33:35'),
+(7, 6, 10, 11, 2999.00, '2025-10-28 09:36:13'),
+(8, 1, 11, 12, 10199.00, '2025-10-28 09:57:21');
 
 -- --------------------------------------------------------
 
@@ -149,7 +176,12 @@ CREATE TABLE `payments` (
 INSERT INTO `payments` (`PaymentID`, `OrderID`, `Amount`, `Status`, `TransactionDate`) VALUES
 (5, 1, 18998.00, 'Pending', '2025-10-26 21:15:01'),
 (6, 2, 2999.00, 'Pending', '2025-10-26 21:48:48'),
-(7, 3, 3000.00, 'Pending', '2025-10-26 22:03:53');
+(7, 3, 3000.00, 'Pending', '2025-10-26 22:03:53'),
+(8, 4, 8997.00, 'Pending', '2025-10-28 08:10:26'),
+(9, 5, 29597.00, 'Pending', '2025-10-28 08:16:35'),
+(10, 6, 5999.00, 'Pending', '2025-10-28 09:33:35'),
+(11, 7, 2999.00, 'Pending', '2025-10-28 09:36:13'),
+(12, 8, 10199.00, 'Pending', '2025-10-28 09:57:21');
 
 -- --------------------------------------------------------
 
@@ -184,7 +216,39 @@ INSERT INTO `productimages` (`ID`, `ProductImageID`, `Path`) VALUES
 (17, 5, 'mechakeys/products/keyboards/MonsgeekM1V5/image5.png'),
 (18, 5, 'mechakeys/products/keyboards/MonsgeekM1V5/image6.png'),
 (19, 5, 'mechakeys/products/keyboards/MonsgeekM1V5/image7.png'),
-(20, 5, 'mechakeys/products/keyboards/MonsgeekM1V5/image8.png');
+(20, 5, 'mechakeys/products/keyboards/MonsgeekM1V5/image8.png'),
+(21, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image1.png'),
+(22, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image2.png'),
+(23, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image3.png'),
+(24, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image4.png'),
+(25, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image5.png'),
+(26, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image6.png'),
+(27, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image7.png'),
+(28, 6, 'mechakeys/products/keyboards/MonsgeekMG108BRainbowMarshmallows/image8.png'),
+(29, 7, 'mechakeys/products/keyboards/RoyalKludgeRKM87Famicom/image4.png'),
+(30, 7, 'mechakeys/products/keyboards/RoyalKludgeRKM87Famicom/image2.png'),
+(31, 7, 'mechakeys/products/keyboards/RoyalKludgeRKM87Famicom/image1.png'),
+(32, 7, 'mechakeys/products/keyboards/RoyalKludgeRKM87Famicom/image3.png'),
+(33, 7, 'mechakeys/products/keyboards/RoyalKludgeRKM87Famicom/image5.png'),
+(34, 7, 'mechakeys/products/keyboards/RoyalKludgeRKM87Famicom/image6.png'),
+(35, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image1.png'),
+(36, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image2.png'),
+(37, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image3.png'),
+(38, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image4.png'),
+(39, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image5.png'),
+(40, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image6.png'),
+(41, 8, 'mechakeys/products/keyboards/KeychronK3MaxQMK/VIA/image7.png'),
+(42, 9, 'mechakeys/products/keyboards/LogitechMXMechanical/image1.png'),
+(43, 9, 'mechakeys/products/keyboards/LogitechMXMechanical/image2.webp'),
+(44, 9, 'mechakeys/products/keyboards/LogitechMXMechanical/image3.webp'),
+(45, 9, 'mechakeys/products/keyboards/LogitechMXMechanical/image4.webp'),
+(46, 9, 'mechakeys/products/keyboards/LogitechMXMechanical/image5.webp'),
+(47, 10, 'mechakeys/products/keyboards/RAKKHananUltra/image1.png'),
+(48, 10, 'mechakeys/products/keyboards/RAKKHananUltra/image2.png'),
+(49, 10, 'mechakeys/products/keyboards/RAKKHananUltra/image3.png'),
+(50, 10, 'mechakeys/products/keyboards/RAKKHananUltra/image4.png'),
+(51, 10, 'mechakeys/products/keyboards/RAKKHananUltra/image5.png'),
+(52, 10, 'mechakeys/products/keyboards/RAKKHananUltra/image6.png');
 
 -- --------------------------------------------------------
 
@@ -207,8 +271,13 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`ProductID`, `Brand`, `Model`, `Description`, `Category`, `TotalSold`, `ProductImageID`) VALUES
-(3, 'Aula', 'F75', 'Ultimate Versatility and Performance with Aula F75 3-in-1 Mechanical Keyboard\r\n\r\nTake your gaming and productivity to the next level with the Aula F75 3-in-1 Gaming Mechanical Keyboard. Designed for gamers and multitaskers alike, this keyboard combines advanced mechanical performance with unmatched flexibility—featuring three connection modes, including Type-C wired, 2.4G wireless, and Bluetooth.\r\n\r\nThe gasket mount construction delivers a softer, quieter typing experience, while hot-swappable mechanical switches allow you to easily customize your keys without soldering. With RGB lighting effects, a compact 80-key layout, and a built-in rechargeable lithium battery, the Aula F75 offers everything you need for a smooth and stylish setup.\r\n\r\n\r\nKey Features and Specifications:\r\n- 3 Connection Modes: Type-C Wired, 2.4G Wireless, and Bluetooth\r\n- Hot-Swappable Mechanical Switches for easy switch replacement\r\n- Gasket Mount Construction for a more cushioned and silent typing experience\r\n- 80-Key Compact Layout for space-saving functionality without losing essential keys\r\n- RGB Switchable Lighting Effects to match your mood or setup\r\n- Rechargeable Lithium Battery for extended wireless use\r\n- Pluggable Design – easily switch out keys or connect across devices\r\n\r\n\r\n️✍ Product Specification：\r\n● Product Name: AULA F75\r\n● Key count: 80 keys\r\n● Rated voltage: DC 3.7V (fully charged with 4.2V)\r\n● Battery capacity: 4000mAh rechargeable lithium battery\r\n● Product weight: approximately 1023g (including wire/receiver)\r\n● Transmission method: Bluetooth/2.4G/wired\r\n● Total travel of buttons: 4.0mm\r\n● Voltage/current: DC 5V ≌ 700mA\r\n● Charging interface: Type-C interface\r\n● Product size: 322.7 * 143.2 * 43.1 ± 1mm\r\n● Accessories: Key puller * 1, switch * 2, data cable * 1, instruction manual * 1\r\n\r\n\r\nWhether you\'re a competitive gamer or a productivity-focused professional, the Aula F75 delivers top-tier performance with the flexibility of three connection modes.', 'keyboard', 7, 1),
-(5, 'Monsgeek', 'M1 V5', 'An excellent upgrade from the previous version, featuring Tool-free Rapid Assembly and Disassembly for effortless customization. It’s both budget-friendly and accessible for beginners and advanced users alike.\r\n\r\n\r\nAdditional highlights include:\r\n- 8000mAh battery for long-lasting, stable performance;\r\n- Multi-mode connectivity, supporting up to 5 devices simultaneously;\r\n- Separate Encoder for Enhanced Stability;\r\n- VIA support for easy key remapping and RGB customization.\r\n\r\nDisclaimer: This model supports customization via VIA only. MonsGeek Driver is not supported.\r\n\r\n\r\nModel: M1 V5 VIA Rapid Disassembly\r\nSpecifications\r\nMount: Gasket\r\nCase Material: Aluminum\r\nLayout: ANSI\r\nConnection: USB-C Wired & 2.4G Wireless & Bluetooth\r\nLED: RGB\r\nHotswap: Y (5-pin)\r\nPCB Thickness: 1.2mm\r\nStabilizers: Pre-assembled Plated-mounted Stabilizers; Separate Screw-in Stabilizers\r\nBattery: 8000mAh\r\nPlate: PC\r\nPlate Foam: Y\r\nSwitch Pad: Y\r\nTape Mod: N\r\nCase Foam: Y\r\nVIA: Y\r\nMonsGeek Driver: N', 'keyboard', 3, 5);
+(3, 'Aula', 'F75', 'Ultimate Versatility and Performance with Aula F75 3-in-1 Mechanical Keyboard\r\n\r\nTake your gaming and productivity to the next level with the Aula F75 3-in-1 Gaming Mechanical Keyboard. Designed for gamers and multitaskers alike, this keyboard combines advanced mechanical performance with unmatched flexibility—featuring three connection modes, including Type-C wired, 2.4G wireless, and Bluetooth.\r\n\r\nThe gasket mount construction delivers a softer, quieter typing experience, while hot-swappable mechanical switches allow you to easily customize your keys without soldering. With RGB lighting effects, a compact 80-key layout, and a built-in rechargeable lithium battery, the Aula F75 offers everything you need for a smooth and stylish setup.\r\n\r\n\r\nKey Features and Specifications:\r\n- 3 Connection Modes: Type-C Wired, 2.4G Wireless, and Bluetooth\r\n- Hot-Swappable Mechanical Switches for easy switch replacement\r\n- Gasket Mount Construction for a more cushioned and silent typing experience\r\n- 80-Key Compact Layout for space-saving functionality without losing essential keys\r\n- RGB Switchable Lighting Effects to match your mood or setup\r\n- Rechargeable Lithium Battery for extended wireless use\r\n- Pluggable Design – easily switch out keys or connect across devices\r\n\r\n\r\n️✍ Product Specification：\r\n● Product Name: AULA F75\r\n● Key count: 80 keys\r\n● Rated voltage: DC 3.7V (fully charged with 4.2V)\r\n● Battery capacity: 4000mAh rechargeable lithium battery\r\n● Product weight: approximately 1023g (including wire/receiver)\r\n● Transmission method: Bluetooth/2.4G/wired\r\n● Total travel of buttons: 4.0mm\r\n● Voltage/current: DC 5V ≌ 700mA\r\n● Charging interface: Type-C interface\r\n● Product size: 322.7 * 143.2 * 43.1 ± 1mm\r\n● Accessories: Key puller * 1, switch * 2, data cable * 1, instruction manual * 1\r\n\r\n\r\nWhether you\'re a competitive gamer or a productivity-focused professional, the Aula F75 delivers top-tier performance with the flexibility of three connection modes.', 'keyboard', 19, 1),
+(5, 'Monsgeek', 'M1 V5', 'An excellent upgrade from the previous version, featuring Tool-free Rapid Assembly and Disassembly for effortless customization. It’s both budget-friendly and accessible for beginners and advanced users alike.\r\n\r\n\r\nAdditional highlights include:\r\n- 8000mAh battery for long-lasting, stable performance;\r\n- Multi-mode connectivity, supporting up to 5 devices simultaneously;\r\n- Separate Encoder for Enhanced Stability;\r\n- VIA support for easy key remapping and RGB customization.\r\n\r\nDisclaimer: This model supports customization via VIA only. MonsGeek Driver is not supported.\r\n\r\n\r\nModel: M1 V5 VIA Rapid Disassembly\r\nSpecifications\r\nMount: Gasket\r\nCase Material: Aluminum\r\nLayout: ANSI\r\nConnection: USB-C Wired & 2.4G Wireless & Bluetooth\r\nLED: RGB\r\nHotswap: Y (5-pin)\r\nPCB Thickness: 1.2mm\r\nStabilizers: Pre-assembled Plated-mounted Stabilizers; Separate Screw-in Stabilizers\r\nBattery: 8000mAh\r\nPlate: PC\r\nPlate Foam: Y\r\nSwitch Pad: Y\r\nTape Mod: N\r\nCase Foam: Y\r\nVIA: Y\r\nMonsGeek Driver: N', 'keyboard', 8, 5),
+(6, 'Monsgeek', 'MG108B Rainbow Marshmallows', 'MonsGeek x Akko Rainbow Marshmallows Keyboard features rainbow-color Marshmallow with playful emojis\r\n\r\nThis full-sized keyboard offers a comprehensive range of function keys and a numeric pad, making it ideal for gamers, office professionals, programmers, and typists alike.\r\n\r\nMulti-modes (Bluetooth 5.0, 2.4Ghz, and Type-C);\r\n\r\nMOG Profile Dye-sub Keycaps;\r\n\r\n5-pin Hotswappable;\r\n\r\nRGB Backlit;\r\n\r\nKeys Remapping and RGB Customization through MonsGeek Driver.', 'keyboard', 0, 6),
+(7, 'Royal Kludge', 'RK M87 Famicom', 'RK Royal Kludge RK M87 Famicom Keyboard captures the iconic aesthetic of the classic 8-bit era with its signature red, white, and grey color block design, evoking a powerful sense of nostalgia for gaming pioneers. This isn\'t just a keyboard; it\'s a functional piece of retro art for your modern desk setup.\r\n\r\nThis compact 88-key TenKeyLess (TKL) layout eliminates the number pad to free up valuable desk space for broader mouse movements, making it a top choice for competitive gamers, minimalists, and anyone seeking an efficient and ergonomic workspace without sacrificing the core function row.\r\n\r\nKey Features:\r\n\r\nIntelligent Tri-Mode Connectivity: Effortlessly switch between three connection methods. Pair with up to three devices via Bluetooth for ultimate flexibility, use the included 2.4GHz wireless dongle for a lag-free gaming experience, or connect via USB-Type C for reliable, pass-through charging and wired use.\r\n\r\nInteractive TFT Color Display: The standout feature is the vibrant TFT screen that goes beyond simple indicators. It provides real-time system data like battery life, connection mode, and Caps/Num Lock status. Crucially, it allows you to upload custom GIFs and images, making your keyboard a truly unique centerpiece.\r\n\r\n5-Pin Hotswappable PCB: Embrace the custom keyboard hobby with a beginner-friendly hot-swap socket design. This allows you to effortlessly install or change any compatible 3-pin or 5-pin mechanical switches to tailor the actuation force and feel—be it linear, tactile, or clicky—to your personal preference, all without soldering.\r\n\r\nDynamic RGB Backlighting: Beneath the retro keycaps lies a modern, vibrant RGB lighting system. Choose from a spectrum of pre-installed lighting effects and colors to match your mood or setup. The shine-through keycap legends ensure perfect visibility, day or night.\r\n\r\nComprehensive Software Suite: Unlock the full potential of your keyboard with the RK Official Software. This powerful tool allows for deep customization, including advanced key remapping, complex macro programming, fine-tuning of every RGB lighting mode, and managing the content displayed on the TFT screen.\r\n\r\nLong-Lasting Battery & Robust Build: Engineered for both wireless freedom and durability, the keyboard is equipped with a high-capacity battery for extended use and features a solid construction that ensures stability during intense typing or gaming sessions.', 'keyboard', 0, 7),
+(8, 'Keychron', 'K3 Max QMK/VIA ', 'The Keychron K3 Max is an ultra-slim 75% layout mechanical keyboard engineered for enthusiasts who demand both portability and uncompromising customization. It combines a sleek, low-profile form factor with the powerful, open-source QMK and VIA software, allowing for deep, real-time personalization without the need for complex flashing.\r\n\r\nThis compact (75%) layout retains the crucial function and navigation keys while significantly reducing the keyboard\'s footprint, making it the perfect centerpiece for a clean, efficient desk setup. It is ideally suited for programmers, writers, and power users who need extensive key customization while saving space.\r\n\r\nSwitch Types:\r\n\r\nRed (K3M-A1): A smooth and consistent linear switch, offering quiet keystrokes with no tactile bump. Ideal for fast-paced gaming and rapid, fluid typing.\r\n\r\n** Brown (K3M-A3): A subtle tactile switch that provides a gentle bump for feedback without being loud. Perfect for those who want the assurance of a tactile response in office or shared environments.\r\n\r\nKey Features:\r\n\r\nUnmatched Customization with QMK/VIA: The standout feature of the K3 Max is its support for the open-source QMK firmware and VIA remapping software. This allows you to reprogram every key, create complex macros, and design sophisticated layered functions directly through a simple web interface, all in real-time.\r\n\r\nTri-Mode Wireless Connectivity: Enjoy complete cable-free freedom. Switch seamlessly between Bluetooth 5.1 for connecting up to three devices, the low-latency 2.4GHz wireless mode for a reliable gaming connection, or the wired USB-C mode for continuous use and charging.\r\n\r\nSlim & Portable Design: With its low-profile keycaps and slim aluminum frame, the Kron K3 Max is incredibly portable and ergonomic, reducing strain on your wrists during long typing sessions. It’s designed to be your go-to keyboard for both desk use and on-the-go productivity.\r\n\r\nHot-Swappable Sockets: The keyboard features hot-swappable sockets, enabling you to easily change between the included low-profile optical switches without any soldering. This future-proofs your investment and lets you experiment with different switch feels.\r\n\r\nWhite Backlighting: Features a clean and elegant white backlight (south-facing) with multiple lighting effects. It provides excellent key visibility in low-light conditions while maintaining a professional and minimalist aesthetic.\r\n\r\nRobust Build & macOS/Windows Compatibility: Crafted with a durable aluminum frame and high-quality keycaps, the K3 Max is built to last. It offers dedicated keycaps and full functional support for both macOS and Windows operating systems.', 'keyboard', 0, 8),
+(9, 'Logitech', 'MX Mechanical', 'The Logitech MX Mechanical is a sophisticated wireless keyboard engineered for professionals and power users who demand precision, comfort, and seamless workflow integration. It combines a modern, low-profile design with smart features that adapt to your environment, creating a truly intelligent typing experience.\r\n\r\nAvailable in both a comprehensive Full-size layout with an integrated number pad and a space-saving Mini (75% compact) layout, it caters to different desk setups and user preferences without sacrificing functionality. The compact version retains essential navigation keys for efficiency.\r\n\r\nSwitch Types:\r\n\r\nTactile Quiet: Provides a subtle, satisfying bump for accurate typing with minimal sound, perfect for shared workspaces like offices and home setups.\r\n\r\nClicky: Offers an audible click and a distinct tactile feedback for a classic, responsive mechanical typing feel that boosts confidence and rhythm.\r\n\r\nLinear: Delivers a smooth, consistent keystroke from top to bottom with a quiet operation, ideal for fast, fluid typing and gaming.\r\n\r\nKey Features:\r\n\r\nSmart Illuminated Keys: The adaptive backlighting automatically adjusts its brightness based on ambient light conditions to conserve power. The proximity sensor detects your hands, waking the keyboard and lighting up the keys as you approach. Individual keycaps are also edge-lit for superior visibility in any lighting.\r\n\r\nAdvanced Multi-Device Pairing: Effortlessly connect and switch between up to three different devices (Windows, macOS, iOS, Android) using either Bluetooth Low Energy or the included Logitech Unifying USB receiver. Seamlessly flow your work from a PC to a laptop or a tablet.\r\n\r\nLogi Options+ Software Customization: Unlock the full potential of the MX Mechanical with the Logi Options+ software. Remap keys, assign complex shortcuts and emoji commands to the F-key row, and create app-specific profiles that automatically switch based on the active application.\r\n\r\nEcosystem Integration with Logi Bolt: For enhanced security and reliable performance in crowded wireless environments, it supports the Logi Bolt receiver, ensuring a robust connection with your computer.\r\n\r\nComfortable Low-Profile Design: The carefully sculpted, low-profile keycaps are optimized for comfort and stability, reducing finger fatigue and promoting a more natural typing posture during extended use.\r\n\r\nUSB-C Quick Charging: A full-speed USB-C port provides convenience. A full charge delivers up to 15 days of use with backlighting on, or up to 10 months with backlighting off, ensuring exceptional battery life for uninterrupted productivity.\r\n\r\nPremium Build & Sustainable Materials: Built with a solid, minimalist aluminum frame for durability and stability, it is also designed with sustainability in mind, using post-consumer recycled plastic in its keycaps and housing. Available in Graphite and Pale Grey to complement any professional workspace.', 'keyboard', 0, 9),
+(10, 'RAKK', 'Hanan Ultra', 'Discover the RAKK Hanan Ultra Mechanical Keyboard, a meticulously crafted tool engineered for peak performance and enduring quality. Designed for enthusiasts who refuse to compromise, it combines a sophisticated gasket-mount structure within a durable aluminum CNC-milled case, offering a uniquely refined typing experience that is both crisp and satisfyingly muted.\r\n\r\nThis compact 81-key (75%) layout efficiently maximizes desk space by eliminating the number pad while retaining the essential function and navigation cluster, making it the ultimate choice for gamers requiring mouse real estate, professionals seeking a minimalist setup, and touch-typists who value efficiency.\r\n\r\nKey Features:\r\n\r\nGasket Mount Structure: The keyboard is equipped with a premium gasket mount system, where the PCB is suspended by soft silicone gaskets instead of being hard-mounted. This innovative design absorbs keystroke impact and minimizes metal-on-metal resonance, resulting in a uniquely softer, more consistent, and poppy typing sound across the entire board.\r\n\r\nUnibody Aluminum CNC Case: Machined from a solid block of aluminum, the case provides exceptional heft, durability, and resistance to flex. The pristine white finish not only offers a sleek, modern aesthetic but also ensures the keyboard remains a stable foundation during intense typing or gaming sessions.\r\n\r\nVersatile Tri-Mode Connectivity: Enjoy complete wireless freedom and a reliable wired connection. Switch effortlessly between Bluetooth 5.0 for multi-device pairing, a lag-free 2.4GHz wireless connection for competitive gaming, and a wired USB-Type C mode for uninterrupted use and charging.\r\n\r\n5-Pin Hot-Swappable PCB: The heart of customization, the hot-swappable sockets allow you to easily install or change any compatible 3-pin or 5-pin mechanical switches without soldering. This empowers you to tailor the actuation force and feedback—be it linear, tactile, or clicky—to your exact preference.\r\n\r\nDynamic RGB Backlighting: Experience a vibrant light show with fully customizable per-key RGB lighting. With a wide spectrum of colors and numerous pre-installed effects, you can personalize your setup\'s ambiance while ensuring perfect key visibility in any environment.\r\n\r\nFull Software Support: Unlock the keyboard\'s full potential with dedicated software. Remap any key, create complex macros, and fine-tune every aspect of the RGB lighting effects to match your workflow and gaming style perfectly.\r\n\r\nPremium Keycaps & Stabilizers: Equipped with high-quality, dye-sublimated PBT keycaps that resist shine and fading over time, ensuring legends remain crisp. The pre-lubricated screw-in stabilizers are meticulously tuned to eliminate wire rattle, providing a smooth and consistent feel for larger keys like the spacebar and shift.\r\n\r\n', 'keyboard', 0, 10);
 
 -- --------------------------------------------------------
 
@@ -231,13 +300,18 @@ CREATE TABLE `productvariations` (
 --
 
 INSERT INTO `productvariations` (`VariationID`, `ProductID`, `Layout`, `SwitchType`, `Color`, `Price`, `StockQuantity`) VALUES
-(1, 3, 75, 'Reaper SW', 'Blue', 2999.00, 13),
-(2, 3, 75, 'Reaper SW', 'Black', 2999.00, 11),
-(3, 3, 75, 'Reaper SW', 'Light Blue', 3000.00, 24),
-(4, 5, 75, 'Piano Pro', 'Moonlight Black', 4200.00, 18),
-(5, 5, 75, 'Cilantro Green', 'Moonlight Black', 4200.00, 6),
-(6, 5, 75, 'Rosewood', 'White', 4600.00, 28),
-(7, 5, 75, 'Piano Pro', 'White', 4600.00, 21);
+(1, 3, 75, 'Reaper SW', 'Blue', 2999.00, 9),
+(2, 3, 75, 'Reaper SW', 'Black', 2999.00, 6),
+(3, 3, 75, 'Reaper SW', 'Light Blue', 3000.00, 21),
+(4, 5, 75, 'Piano Pro', 'Moonlight Black', 4200.00, 16),
+(5, 5, 75, 'Cilantro Green', 'Moonlight Black', 4200.00, 5),
+(6, 5, 75, 'Rosewood', 'White', 4600.00, 26),
+(7, 5, 75, 'Piano Pro', 'White', 4600.00, 21),
+(8, 6, 100, 'Akko V3 Piano Pro Switch, Akko Creamy Cyan Switch', 'Rainbow Marshmallows', 5699.00, 5),
+(9, 7, 75, 'Chartreuse, Blue, Brown, Beige', 'Famicom, Ocean Blue', 4321.00, 3),
+(10, 8, 80, 'Red (Linear – K3M-A1), Brown (Tactile – K3M-A3)', 'Gray', 5590.00, 5),
+(11, 9, 75, 'Logitech Tactile Quiet, Clicky, Linear', ' Graphite, Pale Grey', 7395.00, 6),
+(12, 10, 75, 'Linear, quiet, Clicky', 'Blue, red, Green', 7899.00, 4);
 
 -- --------------------------------------------------------
 
@@ -259,7 +333,12 @@ CREATE TABLE `trackings` (
 INSERT INTO `trackings` (`TrackingID`, `DeliveryPersonID`, `DeliveryStatus`, `LastUpdated`) VALUES
 (4, 0, 'Processing', '2025-10-26 21:15:01'),
 (5, 3, 'Assigned', '2025-10-26 22:41:02'),
-(6, 3, 'Assigned', '2025-10-26 22:38:14');
+(6, 3, 'Assigned', '2025-10-26 22:38:14'),
+(7, 0, 'Processing', '2025-10-28 08:10:26'),
+(8, 0, 'Processing', '2025-10-28 08:16:35'),
+(9, 0, 'Processing', '2025-10-28 09:33:35'),
+(10, 0, 'Processing', '2025-10-28 09:36:13'),
+(11, 3, 'Assigned', '2025-10-28 10:23:51');
 
 -- --------------------------------------------------------
 
@@ -286,7 +365,9 @@ INSERT INTO `users` (`ID`, `FullName`, `Email`, `Password`, `Contact`, `Address`
 (1, 'Justine Agcanas', 'customer@gmail.com', '123456', '09182738829', 'Brgy. 1 San Lorenzo Laoag City', 'customer', '2025-10-16 20:57:36'),
 (2, 'Admin Justine', 'admin@gmail.com', '123456', '', '', 'admin', '2025-10-16 21:01:44'),
 (3, 'Justine Delivery', 'delivery@gmail.com', '123456', '09283028474', '', 'delivery', '2025-10-26 19:16:54'),
-(4, 'John Burat', 'johnburat@gmail.com', 'Qwerty123', '09654345674', 'Brgy. 13 Magat Laod Laoag City', 'customer', '2025-10-26 21:28:00');
+(4, 'John Burat', 'johnburat@gmail.com', 'Qwerty123', '09654345674', 'Brgy. 13 Magat Laod Laoag City', 'customer', '2025-10-26 21:28:00'),
+(5, 'Rayan Bautista', 'ryanpalalay04@gmail.com', 'shibal123', '09392467600', 'Brgy. Saoit, Burgos, Ilocos Norte', 'customer', '2025-10-28 08:08:59'),
+(6, 'doraimon', 'doraimon@gmail.com', 'doraimon', '09666668886644447788', 'Wala', 'customer', '2025-10-28 09:26:51');
 
 --
 -- Indexes for dumped tables
@@ -362,61 +443,61 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `CartID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `CartID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `NotificationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `NotificationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `orderitems`
 --
 ALTER TABLE `orderitems`
-  MODIFY `OrderItemID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `OrderItemID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `OrderID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `OrderID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `PaymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `PaymentID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `productimages`
 --
 ALTER TABLE `productimages`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `ProductID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `ProductID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `productvariations`
 --
 ALTER TABLE `productvariations`
-  MODIFY `VariationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `VariationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `trackings`
 --
 ALTER TABLE `trackings`
-  MODIFY `TrackingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `TrackingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
