@@ -155,7 +155,7 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
     const messageDiv = document.getElementById('add-product-message');
 
     try {
-        const response = await fetch('add_product.php', {
+        const response = await fetch('api/add_product.php', {
             method: 'POST',
             body: formData
         });
@@ -239,7 +239,7 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
 
 async function loadDashboard() {
     try {
-        const response = await fetch('get_dashboard.php');
+        const response = await fetch('api/get_dashboard.php');
         const result = await response.json();
 
         if (result.success) {
@@ -323,7 +323,7 @@ async function loadProducts() {
     container.innerHTML = '<div class="text-center">Loading...</div>';
 
     try {
-        const response = await fetch('get_products.php');
+        const response = await fetch('api/get_products.php');
         const result = await response.json();
 
         if (result.success) {
@@ -388,7 +388,7 @@ async function loadInventory() {
     container.innerHTML = '<div class="text-center">Loading...</div>';
 
     try {
-        const response = await fetch('get_inventory.php');
+        const response = await fetch('api/get_inventory.php');
         const result = await response.json();
 
         if (result.success) {
@@ -455,7 +455,7 @@ async function updateStock() {
     const messageDiv = document.getElementById('edit-stock-message');
 
     try {
-        const response = await fetch('update_stock.php', {
+        const response = await fetch('api/update_stock.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -509,7 +509,7 @@ async function deleteProduct(productId) {
     }
 
     try {
-        const response = await fetch('delete_product.php', {
+        const response = await fetch('api/delete_product.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -535,7 +535,7 @@ let editVariationCounter = 0;
 
 async function editProduct(productId) {
     try {
-        const response = await fetch(`get_product.php?id=${productId}`);
+        const response = await fetch(`api/get_product.php?id=${productId}`);
         const result = await response.json();
 
         if (result.success) {
@@ -647,7 +647,7 @@ async function saveProductEdit() {
     });
 
     try {
-        const response = await fetch('update_product.php', {
+        const response = await fetch('api/update_product.php', {
             method: 'POST',
             body: formData
         });
@@ -697,7 +697,7 @@ let deliveryRiders = [];
 
 async function loadOrders(status = 'all') {
     try {
-        const response = await fetch(`get_orders.php?status=${status}`);
+        const response = await fetch(`api/get_orders.php?status=${status}`);
         const result = await response.json();
 
         if (result.success) {
@@ -793,7 +793,7 @@ async function viewOrderDetails(orderId) {
     modalBody.innerHTML = '<div class="loading text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
     try {
-        const response = await fetch(`get_order_details.php?order_id=${orderId}`);
+        const response = await fetch(`api/get_order_details.php?order_id=${orderId}`);
         const result = await response.json();
 
         if (result.success) {
@@ -942,7 +942,7 @@ async function submitAssignDelivery(event) {
     const formData = new FormData(event.target);
 
     try {
-        const response = await fetch('assign_delivery.php', {
+        const response = await fetch('api/assign_delivery.php', {
             method: 'POST',
             body: formData
         });
@@ -971,7 +971,7 @@ async function openUpdateStatus(orderId, trackingId) {
 
 async function loadDeliveryPersonsForUpdate() {
     try {
-        const response = await fetch('get_delivery_riders.php');
+        const response = await fetch('api/get_delivery_riders.php');
         const riders = await response.json();
 
         const select = document.getElementById('updateDeliveryPerson');
@@ -999,7 +999,7 @@ async function submitUpdateStatus(event) {
     const formData = new FormData(event.target);
 
     try {
-        const response = await fetch('update_order_status.php', {
+        const response = await fetch('api/update_order_status.php', {
             method: 'POST',
             body: formData
         });
