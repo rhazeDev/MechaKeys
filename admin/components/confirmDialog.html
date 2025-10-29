@@ -1,0 +1,15 @@
+<div id="customConfirmDialog" class="modal" style="display:none; z-index: 9999; position:fixed; left:0; top:0; width:100vw; height:100vh; align-items:center; justify-content:center; background:rgba(0,0,0,0.25);">
+  <div class="modal-content" style="max-width:400px;">
+    <div class="modal-header">
+      <h3 id="confirmDialogTitle"><i class="fas fa-question-circle"></i> Confirm Action</h3>
+      <button class="modal-close" onclick="closeCustomConfirm()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="confirmDialogMessage" style="font-size:16px;color:#333;margin-bottom:20px;"></div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeCustomConfirm()">Cancel</button>
+      <button class="btn btn-success" id="confirmDialogOkBtn">OK</button>
+    </div>
+  </div>
+</div>
