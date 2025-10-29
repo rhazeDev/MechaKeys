@@ -20,6 +20,11 @@ $has_contact = !empty($user['Contact']);
 $has_address = !empty($user['Address']);
 $profile_incomplete = !$has_contact || !$has_address;
 
+if ($profile_incomplete) {
+    header('Location: profile.php?from=checkout');
+    exit;
+}
+
 $cart_sql = "SELECT 
                 c.CartID,
                 c.ProductID,
@@ -293,11 +298,6 @@ $shipping_fee = 0; $total = $subtotal + $shipping_fee;
                             <span>₱<?php echo number_format($total, 2); ?></span>
                         </div>
 
-                        <div class="summary-note">
-                            <i class="fas fa-truck"></i>
-                            Estimated delivery: 3-5 business days
-                        </div>
-
                         <button 
                             class="btn-place-order" 
                             onclick="placeOrder()"
@@ -311,17 +311,6 @@ $shipping_fee = 0; $total = $subtotal + $shipping_fee;
                             <i class="fas fa-arrow-left"></i>
                             Back to Cart
                         </a>
-
-                        <div class="security-badges">
-                            <div class="badge">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>Secure Checkout</span>
-                            </div>
-                            <div class="badge">
-                                <i class="fas fa-lock"></i>
-                                <span>Safe Payment</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

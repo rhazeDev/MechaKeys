@@ -81,8 +81,10 @@ $orders_stmt->close();
                         $statusClass = 'status-default';
                         if ($status === 'Delivered') {
                             $statusClass = 'status-delivered';
-                        } elseif ($status === 'Processing' || $status === 'Pending') {
+                        } elseif ($status === 'Processing') {
                             $statusClass = 'status-processing';
+                        } elseif ($status === 'Pending') {
+                            $statusClass = 'status-pending';
                         } elseif ($status === 'Shipped' || $status === 'In Transit') {
                             $statusClass = 'status-shipped';
                         } elseif ($status === 'Cancelled') {
@@ -308,23 +310,27 @@ $orders_stmt->close();
 
             document.getElementById('modalBody').innerHTML = `
                 <div class="modal-order-info">
-                    <div class="modal-info-row">
-                        <span class="modal-label">Order Number:</span>
-                        <span class="modal-value">#${String(order.order_id).padStart(6, '0')}</span>
+                        <div class="modal-info-row">
+                            <span class="modal-label">Order Number:</span>
+                            <span class="modal-value">#${String(order.order_id).padStart(6, '0')}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-label">Order Date:</span>
+                            <span class="modal-value">${new Date(order.placed_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-label">Status:</span>
+                            ${(() => {
+                                const s = order.delivery_status || '';
+                                const cls = 'status-' + s.toLowerCase().replace(/\s+/g, '-');
+                                return `<span class="modal-value status-badge ${cls}">${s}</span>`;
+                            })()}
+                        </div>
+                        <div class="modal-info-row">
+                            <span class="modal-label">Payment:</span>
+                            <span class="modal-value">${order.payment_status}</span>
+                        </div>
                     </div>
-                    <div class="modal-info-row">
-                        <span class="modal-label">Order Date:</span>
-                        <span class="modal-value">${new Date(order.placed_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    </div>
-                    <div class="modal-info-row">
-                        <span class="modal-label">Status:</span>
-                        <span class="modal-value status-badge">${order.delivery_status}</span>
-                    </div>
-                    <div class="modal-info-row">
-                        <span class="modal-label">Payment:</span>
-                        <span class="modal-value">${order.payment_status}</span>
-                    </div>
-                </div>
                 
                 <div class="modal-section">
                     <h3><i class="fas fa-box"></i> Order Items</h3>

@@ -190,18 +190,7 @@ $items_stmt->close();
                             <p><strong>Cash on Delivery (COD)</strong></p>
                             <p class="text-muted">Pay when you receive your order</p>
                         </div>
-                    </div>
-
-                    <div class="info-card highlight">
-                        <h3 class="card-title">
-                            <i class="fas fa-truck"></i>
-                            Delivery Information
-                        </h3>
-                        <div class="info-content">
-                            <p class="text-muted">Estimated Delivery</p>
-                            <p><strong>3-5 Business Days</strong></p>
-                        </div>
-                    </div>
+                    </div>       
                 </div>
             </div>
 

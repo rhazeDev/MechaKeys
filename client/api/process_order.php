@@ -74,7 +74,7 @@ try {
     $payment_id = $conn->insert_id;
     $payment_stmt->close();
 
-    $tracking_stmt = $conn->prepare("INSERT INTO Trackings (DeliveryPersonID, DeliveryStatus, LastUpdated) VALUES (0, 'Processing', NOW())");
+    $tracking_stmt = $conn->prepare("INSERT INTO Trackings (DeliveryPersonID, DeliveryStatus, LastUpdated) VALUES (0, 'Pending', NOW())");
     $tracking_stmt->execute();
     $tracking_id = $conn->insert_id;
     $tracking_stmt->close();
@@ -90,14 +90,14 @@ try {
     $update_payment_stmt->execute();
     $update_payment_stmt->close();
 
-    $order_item_stmt = $conn->prepare("INSERT INTO OrderItems (OrderID, ProductID, Quantity, SubTotal) VALUES (?, ?, ?, ?)");
+    $order_item_stmt = $conn->prepare("INSERT INTO OrderItems (OrderID, ProductID, VariationID, Quantity, SubTotal) VALUES (?, ?, ?, ?, ?)");
     $update_stock_stmt = $conn->prepare("UPDATE ProductVariations SET StockQuantity = StockQuantity - ? WHERE VariationID = ?");
     $update_sold_stmt = $conn->prepare("UPDATE Products SET TotalSold = TotalSold + ? WHERE ProductID = ?");
 
     foreach ($cart_items as $item) {
         $subtotal = $item['Price'] * $item['Quantity'];
 
-        $order_item_stmt->bind_param("iiid", $order_id, $item['ProductID'], $item['Quantity'], $subtotal);
+        $order_item_stmt->bind_param("iiiid", $order_id, $item['ProductID'], $item['VariationID'], $item['Quantity'], $subtotal);
         $order_item_stmt->execute();
 
         $update_stock_stmt->bind_param("ii", $item['Quantity'], $item['VariationID']);

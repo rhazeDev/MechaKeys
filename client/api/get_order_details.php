@@ -58,10 +58,9 @@ $items_sql = "SELECT
                 pi.Path as ImagePath
             FROM OrderItems oi
             INNER JOIN Products p ON oi.ProductID = p.ProductID
-            LEFT JOIN ProductVariations pv ON p.ProductID = pv.ProductID
+            LEFT JOIN ProductVariations pv ON oi.VariationID = pv.VariationID
             LEFT JOIN ProductImages pi ON p.ProductImageID = pi.ProductImageID
-            WHERE oi.OrderID = ?
-            GROUP BY oi.OrderItemID";
+            WHERE oi.OrderID = ?";
 
 $items_stmt = $conn->prepare($items_sql);
 $items_stmt->bind_param("i", $order_id);
