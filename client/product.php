@@ -86,6 +86,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
     <title><?php echo htmlspecialchars($productName); ?> | MechaKeys</title>
     <link href="../css/client.css" rel="stylesheet">
     <link href="../css/product.css" rel="stylesheet">
+    <link href="../css/alert.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="images/favicon.png" type="image/png">
 </head>
@@ -283,6 +284,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
         <img class="modal-content" id="modalImage">
     </div>
 
+    <script src="../js/alert.js"></script>
     <script>
         let allVariations = [];
         let selectedVariation = {
@@ -564,12 +566,12 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
         function addToCart(productId) {
             if (!currentVariationData) {
-                alert('Please select all variation options (Layout, Switch, Color)');
+                showWarning('Please select all variation options (Layout, Switch, Color)', 'Selection Required');
                 return;
             }
 
             if (currentVariationData.StockQuantity <= 0) {
-                alert('This variation is out of stock');
+                showError('This variation is currently out of stock', 'Out of Stock');
                 return;
             }
 
@@ -592,14 +594,14 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message);
+                        showToast(data.message, 'success', 'Added to Cart', 2000);
                     } else {
-                        alert('Error: ' + data.message);
+                        showError(data.message, 'Error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to add item to cart. Please try again.');
+                    showError('Failed to add item to cart. Please try again.', 'Connection Error');
                 })
                 .finally(() => {
                     if (addToCartBtn) {
@@ -610,12 +612,12 @@ $isLoggedIn = isset($_SESSION['user_id']);
 
         function buyNow(productId) {
             if (!currentVariationData) {
-                alert('Please select all variation options (Layout, Switch, Color)');
+                showWarning('Please select all variation options (Layout, Switch, Color)', 'Selection Required');
                 return;
             }
 
             if (currentVariationData.StockQuantity <= 0) {
-                alert('This variation is out of stock');
+                showError('This variation is currently out of stock', 'Out of Stock');
                 return;
             }
 
@@ -641,7 +643,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                     if (data.success) {
                         window.location.href = 'checkout.php';
                     } else {
-                        alert('Error: ' + data.message);
+                        showError(data.message, 'Error');
                         if (buyNowBtn) {
                             buyNowBtn.disabled = false;
                             buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';
@@ -650,7 +652,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to process order. Please try again.');
+                    showError('Failed to process order. Please try again.', 'Connection Error');
                     if (buyNowBtn) {
                         buyNowBtn.disabled = false;
                         buyNowBtn.innerHTML = '<i class="fas fa-bolt"></i> Buy Now';

@@ -93,9 +93,11 @@ if ($result && $result->num_rows > 0) {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <div class="product-specs">
-                            </i> <?php echo htmlspecialchars($product['specs']); ?>
-                        </div>
+                        <?php if ($product['category'] === 'keyboard'): ?>
+                            <div class="product-specs">
+                                </i> <?php echo htmlspecialchars($product['specs']); ?>
+                            </div>
+                        <?php endif; ?>
                         <div class="product-footer">
                             <div class="product-price"><?php echo htmlspecialchars($product['price']); ?></div>
                             <div class="product-actions">
