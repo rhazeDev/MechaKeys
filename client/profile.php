@@ -31,6 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $message = 'Profile updated successfully!';
             $user['Contact'] = $contact;
             $user['Address'] = $address;
+
+            if (!empty($contact) && !empty($address) && isset($_GET['from']) && $_GET['from'] === 'checkout') {
+                header('Location: checkout.php');
+                exit;
+            }
         } else {
             $error = 'Failed to update profile. Please try again.';
         }
