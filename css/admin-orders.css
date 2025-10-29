@@ -1,3 +1,10 @@
+/* Light blue badge for Processing status */
+.badge.info {
+    background: #e3f0ff !important;
+    color: #2196F3 !important;
+    border: 1px solid #b6d6fa;
+    font-weight: 600;
+}
 /* ============================================
    ADMIN ORDER MANAGEMENT STYLES
    ============================================ */
@@ -91,6 +98,61 @@
 /* Order Details Modal */
 .modal-large {
     max-width: 900px;
+}
+
+#orderDetailsModal .modal-footer {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e1e8ed;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#orderDetailsModal .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#orderDetailsModal .btn-secondary {
+    background: #e1e8ed;
+    color: #333;
+}
+
+#orderDetailsModal .btn-secondary:hover {
+    background: #cbd2d9;
+    transform: translateY(-1px);
+}
+
+#orderDetailsModal .btn-success {
+    background: #4CAF50;
+    color: white;
+}
+
+#orderDetailsModal .btn-success:hover {
+    background: #388E3C;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+#orderDetailsModal .btn-danger {
+    background: #f44336;
+    color: white;
+}
+
+#orderDetailsModal .btn-danger:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
 }
 
 .order-details-grid {

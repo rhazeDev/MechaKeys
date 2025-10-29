@@ -652,6 +652,14 @@ body {
     color: var(--error);
 }
 
+/* Info / Processing badge (light blue) */
+.badge.info {
+    background: rgba(33, 150, 243, 0.08);
+    color: var(--info);
+    border: 1px solid rgba(33, 150, 243, 0.16);
+    font-weight: 600;
+}
+
 .action-buttons {
     display: flex;
     gap: 8px;

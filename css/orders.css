@@ -164,12 +164,13 @@
 }
 
 .status-processing {
-    background: #FFF3E0;
-    color: #F57C00;
+    /* Light blue processing badge to match admin style */
+    background: #E3F2FD;
+    color: #1976D2;
 }
 
 .status-processing i {
-    color: #F57C00;
+    color: #1976D2;
 }
 
 .status-shipped {
@@ -206,6 +207,16 @@
 
 .status-default i {
     color: #757575;
+}
+
+/* Pending status (warning / orange) */
+.status-pending {
+    background: #FFF3E0;
+    color: #F57C00;
+}
+
+.status-pending i {
+    color: #F57C00;
 }
 
 /* Order Card Body */
