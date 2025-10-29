@@ -369,7 +369,7 @@ $shipping_fee = 0; $total = $subtotal + $shipping_fee;
             formData.append('payment_method', 'cod');
             formData.append('order_notes', orderNotes);
 
-                        fetch('process_order.php', {
+                        fetch('api/process_order.php', {
                 method: 'POST',
                 body: formData
             })

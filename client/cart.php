@@ -66,7 +66,7 @@ $customer_id = $_SESSION['user_id'];
         });
 
         function loadCart() {
-            fetch('get_cart.php')
+            fetch('api/get_cart.php')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -197,7 +197,7 @@ $customer_id = $_SESSION['user_id'];
             formData.append('cart_id', cartId);
             formData.append('quantity', newQuantity);
 
-            fetch('update_cart.php', {
+            fetch('api/update_cart.php', {
                 method: 'POST',
                 body: formData
             })
@@ -225,7 +225,7 @@ $customer_id = $_SESSION['user_id'];
             const formData = new FormData();
             formData.append('cart_id', cartId);
 
-            fetch('remove_from_cart.php', {
+            fetch('api/remove_from_cart.php', {
                 method: 'POST',
                 body: formData
             })

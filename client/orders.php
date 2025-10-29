@@ -273,7 +273,7 @@ $orders_stmt->close();
             modal.style.display = 'flex';
             modalBody.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
 
-            fetch(`get_order_details.php?order_id=${orderId}`)
+            fetch(`api/get_order_details.php?order_id=${orderId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {

@@ -585,7 +585,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
             formData.append('variation_id', currentVariationData.VariationID);
             formData.append('quantity', quantity);
 
-            fetch('add_to_cart.php', {
+            fetch('api/add_to_cart.php', {
                 method: 'POST',
                 body: formData
             })
@@ -632,7 +632,7 @@ $isLoggedIn = isset($_SESSION['user_id']);
             formData.append('variation_id', currentVariationData.VariationID);
             formData.append('quantity', quantity);
 
-            fetch('add_to_cart.php', {
+            fetch('api/add_to_cart.php', {
                 method: 'POST',
                 body: formData
             })
