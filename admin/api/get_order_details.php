@@ -68,9 +68,8 @@ $items_query = "SELECT
                     (SELECT Path FROM productimages WHERE ProductImageID = p.ProductImageID LIMIT 1) as ImagePath
                 FROM orderitems oi
                 INNER JOIN products p ON oi.ProductID = p.ProductID
-                LEFT JOIN productvariations pv ON oi.ProductID = pv.ProductID
-                WHERE oi.OrderID = ?
-                GROUP BY oi.OrderItemID";
+                LEFT JOIN productvariations pv ON oi.VariationID = pv.VariationID
+                WHERE oi.OrderID = ?";
 
 $items_stmt = $conn->prepare($items_query);
 $items_stmt->bind_param("i", $order_id);

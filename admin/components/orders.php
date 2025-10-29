@@ -1,3 +1,5 @@
+<!-- Custom Confirm Dialog -->
+<?php include __DIR__ . '/confirmDialog.html'; ?>
 <!-- Orders Management Section -->
 <section id="orders" class="section">
     <!-- Filter and Search Bar -->
@@ -7,6 +9,7 @@
             <div class="panel-actions">
                 <select id="orderStatusFilter" class="filter-select" onchange="filterOrders()">
                     <option value="all">All Orders</option>
+                    <option value="Pending">Pending</option>
                     <option value="Processing">Processing</option>
                     <option value="Assigned">Assigned</option>
                     <option value="In Transit">In Transit</option>
@@ -102,6 +105,9 @@
                 <i class="fas fa-spinner fa-spin"></i> Loading...
             </div>
         </div>
+        <div id="orderDetailsFooter" class="modal-footer" style="display: none;">
+            <!-- Approve/Cancel buttons will be inserted here -->
+        </div>
     </div>
 </div>
 
@@ -141,52 +147,6 @@
                     <button type="button" class="btn btn-secondary" onclick="closeAssignDeliveryModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-check"></i> Assign Rider
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Update Status Modal -->
-<div id="updateStatusModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Update Order Status</h3>
-            <button class="modal-close" onclick="closeUpdateStatusModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <form id="updateStatusForm" onsubmit="submitUpdateStatus(event)">
-                <input type="hidden" id="updateOrderId" name="order_id">
-                <input type="hidden" id="updateTrackingId" name="tracking_id">
-                
-                <div class="form-group">
-                    <label for="deliveryStatus">Delivery Status</label>
-                    <select id="deliveryStatus" name="delivery_status" class="form-control" required>
-                        <option value="Processing">Processing</option>
-                        <option value="Assigned">Assigned</option>
-                        <option value="In Transit">In Transit</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="paymentStatus">Payment Status</label>
-                    <select id="paymentStatus" name="payment_status" class="form-control" required>
-                        <option value="Pending">Pending</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Failed">Failed</option>
-                        <option value="Refunded">Refunded</option>
-                    </select>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeUpdateStatusModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Update Status
                     </button>
                 </div>
             </form>

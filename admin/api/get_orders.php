@@ -56,7 +56,7 @@ while ($row = $orders_result->fetch_assoc()) {
 }
 
 $stats_query = "SELECT 
-                    SUM(CASE WHEN t.DeliveryStatus = 'Processing' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN t.DeliveryStatus = 'Pending' THEN 1 ELSE 0 END) as pending,
                     SUM(CASE WHEN t.DeliveryStatus = 'Assigned' THEN 1 ELSE 0 END) as assigned,
                     SUM(CASE WHEN t.DeliveryStatus IN ('Shipped', 'In Transit') THEN 1 ELSE 0 END) as shipped,
                     SUM(CASE WHEN t.DeliveryStatus = 'Delivered' THEN 1 ELSE 0 END) as delivered

@@ -16,50 +16,62 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
 $tracking_id = isset($_POST['tracking_id']) ? intval($_POST['tracking_id']) : 0;
-$delivery_person_id = isset($_POST['delivery_person_id']) ? intval($_POST['delivery_person_id']) : 0;
+$delivery_status = isset($_POST['delivery_status']) ? trim($_POST['delivery_status']) : '';
+$payment_status = isset($_POST['payment_status']) ? trim($_POST['payment_status']) : '';
 
-if ($order_id <= 0 || $tracking_id <= 0 || $delivery_person_id <= 0) {
-    echo json_encode(['success' => false, 'message' => 'Invalid order or delivery person information']);
+if ($order_id <= 0 || $tracking_id <= 0) {
+    echo json_encode(['success' => false, 'message' => 'Invalid order information']);
     exit;
 }
 
-$valid_delivery_statuses = ['Processing', 'Assigned', 'In Transit', 'Delivered', 'Cancelled'];
+$valid_delivery_statuses = ['Pending', 'Processing', 'Assigned', 'In Transit', 'Delivered', 'Cancelled'];
 $valid_payment_statuses = ['Pending', 'Paid', 'Failed', 'Refunded'];
+
+if (!in_array($delivery_status, $valid_delivery_statuses)) {
+    echo json_encode(['success' => false, 'message' => 'Invalid delivery status']);
+    exit;
+}
+
+if (!in_array($payment_status, $valid_payment_statuses)) {
+    echo json_encode(['success' => false, 'message' => 'Invalid payment status']);
+    exit;
+}
 
 $conn->begin_transaction();
 
 try {
-    $verify_rider = $conn->prepare("SELECT ID, FullName FROM users WHERE ID = ? AND Role = 'delivery'");
-    $verify_rider->bind_param("i", $delivery_person_id);
-    $verify_rider->execute();
-    $rider_result = $verify_rider->get_result();
-
-    if ($rider_result->num_rows === 0) {
-        throw new Exception('Invalid delivery person');
-    }
-
-    $rider = $rider_result->fetch_assoc();
-    $verify_rider->close();
-
-    $delivery_status = 'Assigned';
-    $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, DeliveryPersonID = ?, LastUpdated = NOW() WHERE TrackingID = ?");
-    $update_tracking->bind_param("sii", $delivery_status, $delivery_person_id, $tracking_id);
+    $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, LastUpdated = NOW() WHERE TrackingID = ?");
+    $update_tracking->bind_param("si", $delivery_status, $tracking_id);
 
     if (!$update_tracking->execute()) {
         throw new Exception('Failed to update tracking status');
     }
     $update_tracking->close();
 
-    $customer_query = $conn->prepare("SELECT CustomerID FROM orders WHERE OrderID = ?");
-    $customer_query->bind_param("i", $order_id);
-    $customer_query->execute();
-    $customer_result = $customer_query->get_result();
-    $customer = $customer_result->fetch_assoc();
-    $customer_id = $customer['CustomerID'];
-    $customer_query->close();
+    $get_payment = $conn->prepare("SELECT PaymentID, CustomerID FROM orders WHERE OrderID = ?");
+    $get_payment->bind_param("i", $order_id);
+    $get_payment->execute();
+    $result = $get_payment->get_result();
 
-    $notification_title = "Delivery Rider Assigned";
-    $notification_message = "Your order #$order_id has been assigned to " . $rider['FullName'] . " for delivery. Status: Assigned";
+    if ($result->num_rows === 0) {
+        throw new Exception('Order not found');
+    }
+
+    $order_data = $result->fetch_assoc();
+    $payment_id = $order_data['PaymentID'];
+    $customer_id = $order_data['CustomerID'];
+    $get_payment->close();
+
+    $update_payment = $conn->prepare("UPDATE payments SET Status = ? WHERE PaymentID = ?");
+    $update_payment->bind_param("si", $payment_status, $payment_id);
+
+    if (!$update_payment->execute()) {
+        throw new Exception('Failed to update payment status');
+    }
+    $update_payment->close();
+
+    $notification_title = "Order Status Updated";
+    $notification_message = "Your order #$order_id has been updated. Delivery Status: $delivery_status, Payment Status: $payment_status";
     $notification_type = "order";
     $notification_status = "unread";
 
@@ -75,8 +87,9 @@ try {
 
     echo json_encode([
         'success' => true,
-        'delivery_status' => 'Assigned',
-        'rider_name' => $rider['FullName']
+        'message' => 'Order status updated successfully',
+        'delivery_status' => $delivery_status,
+        'payment_status' => $payment_status
     ]);
 } catch (Exception $e) {
     $conn->rollback();
