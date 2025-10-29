@@ -11,6 +11,19 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="form-label">
+                        Category <span class="required">*</span>
+                    </label>
+                    <select name="category" id="categorySelect" class="form-select" required>
+                        <option value="">Select category</option>
+                        <option value="keyboard">Keyboard</option>
+                        <option value="keycaps">Keycaps</option>
+                        <option value="switches">Switches</option>
+                        <option value="accessories">Accessories</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="brandFieldGroup">
+                    <label class="form-label">
                         Brand <span class="required">*</span>
                     </label>
                     <select name="brand" id="brandSelect" class="form-select" required>
@@ -29,19 +42,6 @@
                         Model Name <span class="required">*</span>
                     </label>
                     <input type="text" name="model" class="form-input" placeholder="Enter model name (e.g., F75, K2 Pro)" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        Category <span class="required">*</span>
-                    </label>
-                    <select name="category" class="form-select" required>
-                        <option value="">Select category</option>
-                        <option value="keyboard">Keyboard</option>
-                        <option value="keycaps">Keycaps</option>
-                        <option value="switches">Switches</option>
-                        <option value="accessories">Accessories</option>
-                    </select>
                 </div>
 
                 <div class="form-group full-width">
@@ -70,7 +70,7 @@
             <h3 class="mt-3 mb-2">Product Variations</h3>
             <div class="variations-container" id="variationsContainer">
                 <div class="variation-item">
-                    <div class="form-group">
+                    <div class="form-group keyboard-only-field">
                         <label class="form-label">Layout <span class="required">*</span></label>
                         <select name="variations[0][layout]" class="form-select layout-select" data-index="0" required>
                             <option value="">Select layout</option>
@@ -84,15 +84,15 @@
                             <option value="custom">Custom (Type below)</option>
                         </select>
                     </div>
-                    <div class="form-group custom-layout-group" id="customLayout0" style="display: none;">
+                    <div class="form-group custom-layout-group keyboard-only-field" id="customLayout0" style="display: none;">
                         <label class="form-label">Custom Layout</label>
                         <input type="text" name="variations[0][custom_layout]" class="form-input" placeholder="e.g., 1800, 68%">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group keyboard-only-field">
                         <label class="form-label">Switch Type</label>
                         <input type="text" name="variations[0][switch]" class="form-input" placeholder="e.g., Reaper SW, Cherry MX Red" required>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group keyboard-only-field">
                         <label class="form-label">Color</label>
                         <input type="text" name="variations[0][color]" class="form-input" placeholder="e.g., Blue, Black" required>
                     </div>
@@ -106,7 +106,7 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="btn-add" onclick="addVariation()">
+            <button type="button" class="btn-add keyboard-only-field" onclick="addVariation()">
                 <i class="fas fa-plus"></i>
                 Add Variation
             </button>
