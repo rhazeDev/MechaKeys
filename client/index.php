@@ -62,7 +62,12 @@ session_start();
 
         function addToCart(productId) {
             if (!<?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>) {
-                window.location.href = '../login.php';
+                // Open client auth modal instead of redirecting to separate login page
+                if (typeof showAuthModal === 'function') {
+                    showAuthModal('login');
+                } else {
+                    window.location.href = '../login.php';
+                }
                 return;
             }
 

@@ -33,7 +33,7 @@ if ($isLoggedIn) {
                     <?php endif; ?>
                 </a>
             <?php else: ?>
-                <button class="navbar-icon" onclick="window.location.href='../login.php'">
+                <button class="navbar-icon" onclick="showAuthModal('login')">
                     <i class="fas fa-shopping-cart"></i>
                 </button>
             <?php endif; ?>
@@ -64,8 +64,8 @@ if ($isLoggedIn) {
                     </div>
                 <?php else: ?>
                     <div class="auth-buttons">
-                        <a href="../login.php" class="btn-login">Login</a>
-                        <a href="../register.php" class="btn-register">Register</a>
+                        <button type="button" class="btn-login" onclick="showAuthModal('login')">Login</button>
+                        <button type="button" class="btn-register" onclick="showAuthModal('register')">Register</button>
                     </div>
                 <?php endif; ?>
             </div>
@@ -99,3 +99,5 @@ if ($isLoggedIn) {
     </div>
     <?php endif; ?>
 </nav>
+
+<?php include __DIR__ . '/auth_modal.php'; ?>

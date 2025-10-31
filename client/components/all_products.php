@@ -93,9 +93,9 @@ if (!empty($category)) {
     <?php if (!$isLoggedIn): ?>
         <div class="login-prompt">
             <p><i class="fas fa-lock"></i> <strong>Sign in to add items to cart and checkout</strong></p>
-            <a href="../login.php" class="btn-primary" style="display: inline-block; text-decoration: none;">
+            <button type="button" class="btn-primary" style="display: inline-block;" onclick="if(typeof showAuthModal==='function'){ showAuthModal('login'); } else { window.location.href='../login.php'; }">
                 <i class="fas fa-sign-in-alt"></i> Login Now
-            </a>
+            </button>
         </div>
     <?php endif; ?>
 

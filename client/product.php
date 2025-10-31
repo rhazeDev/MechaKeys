@@ -263,9 +263,9 @@ $isLoggedIn = isset($_SESSION['user_id']);
                             <i class="fas fa-bolt"></i> Buy Now
                         </button>
                     <?php else: ?>
-                        <a href="../login.php" class="btn-add-cart" style="text-decoration: none; text-align: center;">
+                        <button type="button" class="btn-add-cart" style="text-decoration: none; text-align: center;" onclick="if(typeof showAuthModal==='function'){ showAuthModal('login'); } else { window.location.href='../login.php'; }">
                             <i class="fas fa-lock"></i> Login to Purchase
-                        </a>
+                        </button>
                     <?php endif; ?>
                 </div>
 
