@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 29, 2025 at 02:08 PM
+-- Generation Time: Nov 02, 2025 at 03:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -75,7 +75,13 @@ INSERT INTO `notifications` (`NotificationID`, `CustomerID`, `Title`, `Message`,
 (20, 1, 'Order Placed Successfully', 'Your order #9 has been placed successfully. Total: ₱17,543.00', 'order', 'unread', '2025-10-29 20:58:20'),
 (21, 1, 'Order Approved', 'Your order #9 has been approved and is now being processed.', 'order', 'unread', '2025-10-29 20:59:41'),
 (22, 1, 'Order Placed Successfully', 'Your order #10 has been placed successfully. Total: ₱13,998.00', 'order', 'unread', '2025-10-29 21:00:12'),
-(23, 1, 'Order Cancelled', 'Your order #10 has been cancelled.', 'order', 'unread', '2025-10-29 21:00:26');
+(23, 1, 'Order Cancelled', 'Your order #10 has been cancelled.', 'order', 'unread', '2025-10-29 21:00:26'),
+(24, 1, 'Order Status Updated', 'Your order #9 has been updated. Delivery Status: Ready to Deliver, Payment Status: Pending', 'order', 'unread', '2025-11-02 22:17:41'),
+(25, 1, 'Delivery Status Updated', 'Your order #9 has been picked up and is on the way.', 'delivery', 'unread', '2025-11-02 22:23:47'),
+(26, 1, 'Delivery Status Updated', 'Your order #9 is on the way to you!', 'delivery', 'unread', '2025-11-02 22:23:57'),
+(27, 1, 'Delivery Status Updated', 'Your order #9 has been delivered. Thank you!', 'delivery', 'unread', '2025-11-02 22:24:17'),
+(28, 1, 'Delivery Status Updated', 'Your order #9 has been picked up and is on the way.', 'delivery', 'unread', '2025-11-02 22:25:20'),
+(29, 1, 'Delivery Status Updated', 'Your order #9 has been delivered. Thank you!', 'delivery', 'unread', '2025-11-02 22:25:26');
 
 -- --------------------------------------------------------
 
@@ -328,7 +334,7 @@ CREATE TABLE `trackings` (
 --
 
 INSERT INTO `trackings` (`TrackingID`, `DeliveryPersonID`, `DeliveryStatus`, `LastUpdated`) VALUES
-(12, 0, 'Processing', '2025-10-29 20:59:41'),
+(12, 3, 'Delivered', '2025-11-02 22:25:26'),
 (13, 0, 'Cancelled', '2025-10-29 21:00:26');
 
 -- --------------------------------------------------------
@@ -355,7 +361,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`ID`, `FullName`, `Email`, `Password`, `Contact`, `Address`, `Role`, `DateCreated`) VALUES
 (1, 'Justine Agcanas', 'customer@gmail.com', '123456', '09182738829', 'Brgy. 1 San Lorenzo Laoag City', 'customer', '2025-10-16 20:57:36'),
 (2, 'Admin Justine', 'admin@gmail.com', '123456', '', '', 'admin', '2025-10-16 21:01:44'),
-(3, 'Justine Delivery', 'delivery@gmail.com', '123456', '09283028474', '', 'delivery', '2025-10-26 19:16:54'),
+(3, 'Justine Delivery', 'delivery@gmail.com', '123456', '09283028474', 'Jan sa gilid', 'delivery', '2025-10-26 19:16:54'),
 (4, 'John Burat', 'johnburat@gmail.com', 'Qwerty123', '09654345674', 'Brgy. 13 Magat Laod Laoag City', 'customer', '2025-10-26 21:28:00'),
 (5, 'Rayan Bautista', 'ryanpalalay04@gmail.com', 'shibal123', '09392467600', 'Brgy. Saoit, Burgos, Ilocos Norte', 'customer', '2025-10-28 08:08:59'),
 (6, 'doraimon', 'doraimon@gmail.com', 'doraimon', '09666668886644447788', 'Wala', 'customer', '2025-10-28 09:26:51');
@@ -440,7 +446,7 @@ ALTER TABLE `carts`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `NotificationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `NotificationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `orderitems`
