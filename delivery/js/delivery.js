@@ -281,7 +281,6 @@ function loadProfileInfo() {
         profileName.textContent = 'Delivery Rider';
         profileEmail.textContent = 'Email: rider@mechakeys.com';
         profilePhone.textContent = 'Phone: +63 XXX XXX XXXX';
-        profileAddress.textContent = 'Address: City, Country';
     }
 }
 
@@ -291,9 +290,7 @@ function openProfileModal() {
 }
 
 function logoutDelivery() {
-    if (confirm('Are you sure you want to logout?')) {
-        window.location.href = '../logout.php';
-    }
+    window.location.href = '../logout.php';
 }
 
 function closeModal(modalId) {
