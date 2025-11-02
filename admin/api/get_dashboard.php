@@ -14,6 +14,11 @@ $total_variations = $conn->query("SELECT COUNT(*) as count FROM productvariation
 $total_stock = $conn->query("SELECT SUM(StockQuantity) as total FROM productvariations")->fetch_assoc()['total'];
 $low_stock_count = $conn->query("SELECT COUNT(*) as count FROM productvariations WHERE StockQuantity < 10")->fetch_assoc()['count'];
 
+$delivery_riders = $conn->query("SELECT COUNT(*) as count FROM users WHERE Role = 'delivery'")->fetch_assoc()['count'];
+$active_deliveries = $conn->query("SELECT COUNT(*) as count FROM trackings WHERE DeliveryStatus NOT IN ('Delivered', 'Cancelled')")->fetch_assoc()['count'];
+$delivered_today = $conn->query("SELECT COUNT(*) as count FROM trackings WHERE DeliveryStatus = 'Delivered' AND DATE(LastUpdated) = CURDATE()")->fetch_assoc()['count'];
+$pending_assignments = $conn->query("SELECT COUNT(*) as count FROM trackings WHERE DeliveryPersonID = 0 OR DeliveryPersonID IS NULL")->fetch_assoc()['count'];
+
 $products_query = "SELECT p.*, 
                    (SELECT Path FROM productimages WHERE ProductImageID = p.ProductImageID LIMIT 1) as ImagePath,
                    (SELECT SUM(StockQuantity) FROM productvariations WHERE ProductID = p.ProductID) as TotalStock,
@@ -35,7 +40,11 @@ echo json_encode([
         'total_products' => $total_products,
         'total_variations' => $total_variations,
         'total_stock' => $total_stock ?? 0,
-        'low_stock_count' => $low_stock_count
+        'low_stock_count' => $low_stock_count,
+        'delivery_riders' => $delivery_riders,
+        'active_deliveries' => $active_deliveries,
+        'delivered_today' => $delivered_today,
+        'pending_assignments' => $pending_assignments
     ],
     'products' => $products
 ]);

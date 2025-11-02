@@ -24,7 +24,7 @@ if ($order_id <= 0 || $tracking_id <= 0) {
     exit;
 }
 
-$valid_delivery_statuses = ['Pending', 'Processing', 'Assigned', 'In Transit', 'Delivered', 'Cancelled'];
+$valid_delivery_statuses = ['Pending', 'Processing', 'Ready to Deliver', 'Assigned', 'In Transit', 'Delivered', 'Cancelled'];
 $valid_payment_statuses = ['Pending', 'Paid', 'Failed', 'Refunded'];
 
 if (!in_array($delivery_status, $valid_delivery_statuses)) {
