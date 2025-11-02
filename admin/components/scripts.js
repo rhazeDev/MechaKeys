@@ -308,26 +308,11 @@ async function loadDashboard() {
 
         if (result.success) {
             const stats = result.stats;
-            document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = stats.total_products;
-            document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = stats.total_variations;
-            document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = stats.total_stock;
-            document.querySelector('.stat-card:nth-child(4) .stat-value').textContent = stats.low_stock_count;
 
-            const lowStockCard = document.querySelector('.stat-card:nth-child(4)');
-            const lowStockChange = lowStockCard.querySelector('.stat-change');
-            if (stats.low_stock_count > 0) {
-                lowStockChange.className = 'stat-change negative';
-                lowStockChange.innerHTML = `
-                    <i class="fas fa-arrow-down"></i>
-                    Products need restocking
-                `;
-            } else {
-                lowStockChange.className = 'stat-change positive';
-                lowStockChange.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    All stock levels good
-                `;
-            }
+            document.getElementById('deliveryRidersCount').textContent = stats.delivery_riders || 0;
+            document.getElementById('activeDeliveriesCount').textContent = stats.active_deliveries || 0;
+            document.getElementById('deliveredTodayCount').textContent = stats.delivered_today || 0;
+            document.getElementById('pendingAssignmentsCount').textContent = stats.pending_assignments || 0;
 
             const tbody = document.querySelector('#dashboard .data-table tbody');
             if (result.products && result.products.length > 0) {
@@ -807,6 +792,11 @@ async function loadOrders(status = 'all') {
                                     <button class="btn-icon btn-view" onclick="viewOrderDetails(${order.OrderID})" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    ${order.DeliveryStatus === 'Processing' ? `
+                                        <button class="btn-icon btn-ready" onclick="setOrderReadyToDeliver(${order.OrderID}, ${order.TrackingID})" title="Mark Ready to Deliver">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    ` : ''}
                                     ${!order.DeliveryPersonID && order.DeliveryStatus !== 'Pending' && order.DeliveryStatus !== 'Cancelled' ? `
                                         <button class="btn-icon btn-assign" onclick="openAssignDelivery(${order.OrderID}, ${order.TrackingID})" title="Assign Rider">
                                             <i class="fas fa-user-plus"></i>
@@ -831,7 +821,9 @@ async function loadOrders(status = 'all') {
 function getStatusClass(status) {
     const statusMap = {
         'Pending': 'warning',
-        'Processing': 'info', 'Assigned': 'primary',
+        'Processing': 'info',
+        'Ready to Deliver': 'success',
+        'Assigned': 'primary',
         'Shipped': 'primary',
         'In Transit': 'primary',
         'Delivered': 'success',
@@ -848,6 +840,37 @@ function filterOrders() {
 function refreshOrders() {
     const status = document.getElementById('orderStatusFilter').value;
     loadOrders(status);
+}
+
+async function setOrderReadyToDeliver(orderId, trackingId) {
+    showCustomConfirm(
+        'Mark this order as <span style="color:#4CAF50;font-weight:600;">Ready to Deliver</span>?<br><small>The order will be ready for pickup by delivery rider.</small>',
+        async () => {
+            try {
+                const formData = new FormData();
+                formData.append('order_id', orderId);
+                formData.append('tracking_id', trackingId);
+                formData.append('delivery_status', 'Ready to Deliver');
+                formData.append('payment_status', 'Pending');
+                const response = await fetch('api/update_order_status.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Order marked as Ready to Deliver', 'success', 'Status Updated');
+                    refreshOrders();
+                } else {
+                    showError(result.message || 'Failed to update order status', 'Update Failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred while updating the order', 'Error');
+            }
+        }
+    );
 }
 
 async function viewOrderDetails(orderId) {

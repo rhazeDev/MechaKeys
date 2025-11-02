@@ -138,5 +138,67 @@
                 <?php endif; ?>
             </div>
         </div>
+
+        <!-- Delivery Stats -->
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-title">Delivery Riders</div>
+                </div>
+                <div class="stat-icon primary">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="deliveryRidersCount">0</div>
+            <div class="stat-change">
+                Active delivery team
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-title">Active Deliveries</div>
+                </div>
+                <div class="stat-icon info">
+                    <i class="fas fa-route"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="activeDeliveriesCount">0</div>
+            <div class="stat-change">
+                In progress deliveries
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-title">Delivered Today</div>
+                </div>
+                <div class="stat-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="deliveredTodayCount">0</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                Today's deliveries
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-title">Pending Assignments</div>
+                </div>
+                <div class="stat-icon warning">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="pendingAssignmentsCount">0</div>
+            <div class="stat-change">
+                Awaiting rider assignment
+            </div>
+        </div>
     </div>
 </section>

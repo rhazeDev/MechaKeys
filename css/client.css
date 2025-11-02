@@ -1470,6 +1470,47 @@ footer {
     border-radius: 4px;
 }
 
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 10px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    height: 32px;
+    width: 32px;
+}
+
+.toggle-password:hover {
+    color: #111;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.toggle-password:active {
+    transform: scale(0.95);
+}
+
+.toggle-password i {
+    font-size: 16px;
+    pointer-events: none;
+}
+
 .auth-switch {
     margin-top: 8px;
     font-size: 14px;

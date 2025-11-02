@@ -297,6 +297,17 @@
     box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
 }
 
+/* Ready Button (Check Circle Icon) - Success Green */
+.btn-icon.btn-ready {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-icon.btn-ready:hover {
+    background: #388E3C;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
 /* Edit Button (Edit Icon) - Orange */
 .btn-icon.btn-edit {
     background: #FF9800;
@@ -308,15 +319,15 @@
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
 }
 
-/* Assign Button (User Plus Icon) - Green */
+/* Assign Button (User Plus Icon) - Purple */
 .btn-icon.btn-assign {
-    background: #4CAF50;
+    background: #9C27B0;
     color: white;
 }
 
 .btn-icon.btn-assign:hover {
-    background: #388E3C;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    background: #7B1FA2;
+    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
 }
 
 /* Update Status Modal Styling */
