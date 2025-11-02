@@ -9,19 +9,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
+    $is_ajax = isset($_POST['ajax']) && $_POST['ajax'] === 'true';
 
     if (empty($fullname) || empty($email) || empty($password) || empty($confirm_password)) {
         $message = "⚠️ Please fill in all fields.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_register;
     }
 
     if ($password !== $confirm_password) {
         $message = "❌ Passwords do not match.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_register;
     }
 
     if (strlen($password) < 6) {
         $message = "❌ Password must be at least 6 characters long.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_register;
     }
 
@@ -34,6 +50,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $message = "❌ Email already registered.";
         $stmt->close();
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_register;
     }
 
@@ -44,6 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$stmt->execute()) {
         $message = "❌ Error creating account. Please try again.";
         $stmt->close();
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_register;
     }
 
@@ -54,7 +80,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $_SESSION['email'] = $email;
     $_SESSION['role'] = 'customer';
 
-    header("Location: ./client/index.php");
+    if ($is_ajax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'redirect' => '/mechakeys/client/index.php']);
+        exit;
+    }
+
+    header("Location: /mechakeys/client/index.php");
     exit;
 
     end_register:

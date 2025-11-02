@@ -7,9 +7,15 @@ $message = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
+    $is_ajax = isset($_POST['ajax']) && $_POST['ajax'] === 'true';
 
     if (empty($email) || empty($password)) {
         $message = "⚠️ Please enter both email and password.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_login;
     }
 
@@ -22,6 +28,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$result || $result->num_rows !== 1) {
         $message = "❌ Invalid email or password.";
         $stmt->close();
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
         goto end_login;
     }
 
@@ -32,12 +43,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $stmt->close();
 
+    $redirect_url = '/mechakeys/client/index.php';
     if ($user['Role'] === 'admin') {
-        header("Location: ./admin/index.php");
+        $redirect_url = '/mechakeys/admin/index.php';
+    } elseif ($user['Role'] === 'delivery') {
+        $redirect_url = '/mechakeys/delivery/index.php';
+    }
+
+    if ($is_ajax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'redirect' => $redirect_url]);
         exit;
     }
 
-    header("Location: ./client/index.php");
+    header("Location: $redirect_url");
     exit;
 
     end_login:
