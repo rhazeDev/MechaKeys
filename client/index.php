@@ -62,7 +62,6 @@ session_start();
 
         function addToCart(productId) {
             if (!<?php echo isset($_SESSION['user_id']) ? 'true' : 'false'; ?>) {
-                // Open client auth modal instead of redirecting to separate login page
                 if (typeof showAuthModal === 'function') {
                     showAuthModal('login');
                 } else {

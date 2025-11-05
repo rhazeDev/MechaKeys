@@ -25,6 +25,8 @@ $rider_query->close();
     <title>Delivery Dashboard - MechaKeys</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/delivery.css">
+    <!-- Mapbox CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 </head>
 
 <body>
@@ -36,6 +38,9 @@ $rider_query->close();
                     Deliveries
                 </h1>
                 <div class="header-actions">
+                    <button class="btn-icon" id="setLocationBtn" title="Set Location">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </button>
                     <button class="btn-icon" id="refreshBtn" title="Refresh">
                         <i class="fas fa-sync-alt"></i>
                     </button>
@@ -189,7 +194,76 @@ $rider_query->close();
         </div>
     </div>
 
+    <!-- Location Map Modal -->
+    <div id="locationModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2><i class="fas fa-route"></i> Navigation to Customer</h2>
+                <button class="modal-close" onclick="closeModal('locationModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="locationMapContent" class="modal-body modal-map-body">
+                <!-- Map content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('locationModal')">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Your Location Modal -->
+    <div id="setLocationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-map-pin"></i> Set Your Current Location</h2>
+                <button class="modal-close" onclick="closeModal('setLocationModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="manual-location-info">
+                    <p style="color: #64748b; margin-bottom: 1.5rem; text-align: center;">
+                        <i class="fas fa-info-circle"></i> 
+                        Search for your current location to share it with customers
+                    </p>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1e293b;">
+                            <i class="fas fa-search-location"></i> Search for your location:
+                        </label>
+                        <input type="text" id="locationSearchInput" 
+                               placeholder="Enter address, landmark, or place name..." 
+                               style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem;">
+                        <button id="searchLocationBtn" class="btn btn-primary" style="margin-top: 0.75rem; width: 100%;">
+                            <i class="fas fa-search"></i> Search Location
+                        </button>
+                    </div>
+                    
+                    <!-- Hidden coordinates fields -->
+                    <input type="hidden" id="manualLatitude">
+                    <input type="hidden" id="manualLongitude">
+                    
+                    <button id="setManualLocationBtn" class="btn btn-success" style="margin-top: 0.75rem; width: 100%; display: none;">
+                        <i class="fas fa-check"></i> Confirm Location
+                    </button>
+                    
+                    <div id="selectedLocationPreview" style="display: none; background: #f0fdf4; border: 2px solid #86efac; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                        <p style="margin: 0; color: #166534; font-weight: 600;">
+                            <i class="fas fa-map-marker-alt"></i> 
+                            <span id="selectedLocationName"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/alert.js"></script>
+    <!-- Mapbox JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <script src="js/delivery.js"></script>
 </body>
 

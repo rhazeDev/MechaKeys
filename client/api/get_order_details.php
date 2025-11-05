@@ -25,8 +25,11 @@ $order_sql = "SELECT
                 t.DeliveryStatus,
                 t.DeliveryPersonID,
                 dp.FullName as DeliveryPersonName,
+                dp.Contact as DeliveryPersonContact,
+                dp.Location as DeliveryPersonLocation,
                 p.Status as PaymentStatus,
-                u.Address
+                u.Address,
+                u.Location as CustomerLocation
             FROM Orders o
             INNER JOIN Trackings t ON o.TrackingID = t.TrackingID
             INNER JOIN Payments p ON o.PaymentID = p.PaymentID
@@ -55,11 +58,14 @@ $items_sql = "SELECT
                 pv.Layout,
                 pv.SwitchType,
                 pv.Color,
-                pi.Path as ImagePath
+                (SELECT pi2.Path 
+                 FROM ProductImages pi2 
+                 WHERE pi2.ProductImageID = p.ProductImageID 
+                 ORDER BY pi2.ID ASC 
+                 LIMIT 1) as ImagePath
             FROM OrderItems oi
             INNER JOIN Products p ON oi.ProductID = p.ProductID
             LEFT JOIN ProductVariations pv ON oi.VariationID = pv.VariationID
-            LEFT JOIN ProductImages pi ON p.ProductImageID = pi.ProductImageID
             WHERE oi.OrderID = ?";
 
 $items_stmt = $conn->prepare($items_sql);
@@ -98,6 +104,10 @@ echo json_encode([
         'payment_status' => $order['PaymentStatus'],
         'order_reference' => 'MK-' . str_pad($order['TrackingID'], 6, '0', STR_PAD_LEFT),
         'delivery_person' => $order['DeliveryPersonName'] ?? 'Not Assigned',
+        'delivery_person_contact' => $order['DeliveryPersonContact'] ?? '',
+        'delivery_person_id' => $order['DeliveryPersonID'],
+        'delivery_person_location' => $order['DeliveryPersonLocation'] ?? '',
+        'customer_location' => $order['CustomerLocation'] ?? '',
         'address' => $order['Address']
     ],
     'items' => $order_items

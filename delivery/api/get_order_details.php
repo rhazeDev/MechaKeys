@@ -44,11 +44,10 @@ try {
             pv.SwitchType,
             pv.Color,
             pv.Price,
-            pi.Path as ImagePath
+            (SELECT Path FROM productimages WHERE ProductImageID = p.ProductImageID LIMIT 1) as ImagePath
         FROM orderitems oi
         JOIN products p ON oi.ProductID = p.ProductID
         JOIN productvariations pv ON oi.VariationID = pv.VariationID
-        LEFT JOIN productimages pi ON pi.ProductImageID = p.ProductImageID
         WHERE oi.OrderID = ?
     ");
     $items_query->bind_param("i", $order_id);

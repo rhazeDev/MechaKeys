@@ -18,9 +18,15 @@ $order_id = isset($_POST['order_id']) ? intval($_POST['order_id']) : 0;
 $tracking_id = isset($_POST['tracking_id']) ? intval($_POST['tracking_id']) : 0;
 $delivery_status = isset($_POST['delivery_status']) ? trim($_POST['delivery_status']) : '';
 $payment_status = isset($_POST['payment_status']) ? trim($_POST['payment_status']) : '';
+$delivery_rider_id = isset($_POST['delivery_rider_id']) ? intval($_POST['delivery_rider_id']) : 0;
 
 if ($order_id <= 0 || $tracking_id <= 0) {
     echo json_encode(['success' => false, 'message' => 'Invalid order information']);
+    exit;
+}
+
+if ($delivery_status === 'Ready to Deliver' && $delivery_rider_id <= 0) {
+    echo json_encode(['success' => false, 'message' => 'Please select a delivery rider']);
     exit;
 }
 
@@ -40,8 +46,13 @@ if (!in_array($payment_status, $valid_payment_statuses)) {
 $conn->begin_transaction();
 
 try {
-    $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, LastUpdated = NOW() WHERE TrackingID = ?");
-    $update_tracking->bind_param("si", $delivery_status, $tracking_id);
+    if ($delivery_rider_id > 0) {
+        $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, DeliveryPersonID = ?, LastUpdated = NOW() WHERE TrackingID = ?");
+        $update_tracking->bind_param("sii", $delivery_status, $delivery_rider_id, $tracking_id);
+    } else {
+        $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, LastUpdated = NOW() WHERE TrackingID = ?");
+        $update_tracking->bind_param("si", $delivery_status, $tracking_id);
+    }
 
     if (!$update_tracking->execute()) {
         throw new Exception('Failed to update tracking status');
@@ -72,6 +83,20 @@ try {
 
     $notification_title = "Order Status Updated";
     $notification_message = "Your order #$order_id has been updated. Delivery Status: $delivery_status, Payment Status: $payment_status";
+
+    if ($delivery_rider_id > 0) {
+        $get_rider = $conn->prepare("SELECT FullName FROM users WHERE ID = ? AND Role = 'delivery'");
+        $get_rider->bind_param("i", $delivery_rider_id);
+        $get_rider->execute();
+        $rider_result = $get_rider->get_result();
+
+        if ($rider_result->num_rows > 0) {
+            $rider_data = $rider_result->fetch_assoc();
+            $notification_message .= ". Your order has been assigned to delivery rider: " . $rider_data['FullName'];
+        }
+        $get_rider->close();
+    }
+
     $notification_type = "order";
     $notification_status = "unread";
 

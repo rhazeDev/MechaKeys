@@ -642,6 +642,12 @@ body {
     color: var(--success);
 }
 
+.badge.primary {
+    background: rgba(30, 30, 30, 0.08);
+    color: var(--text-dark);
+    border: 1px solid rgba(30, 30, 30, 0.16);
+}
+
 .badge.warning {
     background: rgba(255, 152, 0, 0.1);
     color: var(--warning);
@@ -650,6 +656,11 @@ body {
 .badge.error {
     background: rgba(229, 115, 115, 0.1);
     color: var(--error);
+}
+
+.badge.default {
+    background: rgba(158, 158, 158, 0.1);
+    color: #666;
 }
 
 /* Info / Processing badge (light blue) */

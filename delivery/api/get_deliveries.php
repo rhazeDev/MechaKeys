@@ -22,6 +22,7 @@ try {
                 c.Email as CustomerEmail,
                 c.Address as CustomerAddress,
                 c.Contact as CustomerPhone,
+                c.Location as CustomerLocation,
                 t.TrackingID,
                 t.DeliveryStatus,
                 (SELECT COUNT(*) FROM orderitems WHERE OrderID = o.OrderID) as ItemCount
@@ -76,6 +77,7 @@ try {
             'CustomerEmail' => $row['CustomerEmail'],
             'CustomerAddress' => $row['CustomerAddress'],
             'CustomerPhone' => $row['CustomerPhone'],
+            'CustomerLocation' => $row['CustomerLocation'],
             'TotalAmount' => $row['TotalAmount'],
             'ItemCount' => $row['ItemCount'],
             'PlaceOrdered' => $row['PlaceOrdered'],

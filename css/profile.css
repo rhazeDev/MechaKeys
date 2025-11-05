@@ -239,6 +239,9 @@
 .form-textarea {
     resize: vertical;
     min-height: 100px;
+    max-height: 200px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
 }
 
 .form-hint {
@@ -396,6 +399,314 @@
     }
 }
 
+/* Map Modal Styles */
+.map-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.map-modal-content {
+    background: var(--card-bg);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.map-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 30px;
+    border-bottom: 2px solid #E0E0E0;
+    flex-shrink: 0;
+    background: var(--card-bg);
+}
+
+.map-modal-header h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-light);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.map-modal-header h3 i {
+    color: var(--primary);
+}
+
+.map-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--text-muted);
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: var(--transition);
+}
+
+.map-modal-close:hover {
+    background: var(--background);
+    color: var(--error);
+}
+
+.map-modal-body {
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: calc(90vh - 200px);
+}
+
+.map-search-container {
+    padding: 20px 30px;
+    background: var(--background);
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.geocoder {
+    width: 100%;
+}
+
+.mapboxgl-ctrl-geocoder {
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+    border: 2px solid #E0E0E0;
+    border-radius: 10px;
+}
+
+.mapboxgl-ctrl-geocoder input {
+    height: 48px;
+    font-size: 15px;
+}
+
+.map-container {
+    width: 100%;
+    height: 350px;
+    min-height: 350px;
+    flex: 1;
+    background: #f0f0f0;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+.map-info {
+    padding: 16px 30px;
+    background: #E3F2FD;
+    color: #1565C0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-top: 1px solid #BBDEFB;
+}
+
+.map-info i {
+    font-size: 16px;
+}
+
+.map-modal-footer {
+    padding: 20px 30px;
+    border-top: 2px solid #E0E0E0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    background: var(--card-bg);
+}
+
+.btn-location-picker {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+    z-index: 10;
+}
+
+.btn-location-picker:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-location-picker i {
+    font-size: 14px;
+}
+
+/* Main Pick Location Button */
+.btn-pick-location-main {
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 8px;
+}
+
+.btn-pick-location-main:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-pick-location-main i {
+    font-size: 20px;
+}
+
+/* Change Location Button */
+.btn-change-location {
+    padding: 12px 20px;
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-change-location:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-change-location i {
+    font-size: 14px;
+}
+
+.btn-cancel {
+    padding: 12px 24px;
+    background: transparent;
+    border: 2px solid #E0E0E0;
+    color: var(--text-light);
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-cancel:hover {
+    background: var(--background);
+    border-color: var(--text-muted);
+}
+
+.btn-confirm {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Mapbox Marker Custom Style */
+.mapboxgl-marker {
+    cursor: pointer;
+}
+
+.mapboxgl-popup-content {
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 1024px) {
+    .profile-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .profile-sidebar {
+        position: relative;
+        top: 0;
+    }
+
+    .profile-content {
+        padding: 30px;
+    }
+}
+
 @media (max-width: 768px) {
     .profile-main {
         margin: 20px auto;
@@ -421,6 +732,81 @@
     .section-subtitle {
         margin-left: 0;
         margin-top: 8px;
+    }
+
+    /* Map Modal Mobile Styles */
+    .map-modal {
+        padding: 10px;
+    }
+
+    .map-modal-content {
+        width: 100%;
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+
+    .map-modal-header {
+        padding: 16px 20px;
+    }
+
+    .map-modal-header h3 {
+        font-size: 18px;
+    }
+
+    .map-search-container {
+        padding: 12px 16px;
+    }
+
+    .mapboxgl-ctrl-geocoder {
+        font-size: 14px;
+    }
+
+    .mapboxgl-ctrl-geocoder input {
+        height: 44px;
+        font-size: 14px;
+    }
+
+    .map-container {
+        height: 300px;
+        min-height: 300px;
+    }
+
+    .map-info {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+
+    .map-modal-footer {
+        padding: 16px;
+        flex-direction: column-reverse;
+    }
+
+    .btn-cancel,
+    .btn-confirm {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+
+    .btn-location-picker {
+        position: relative;
+        right: auto;
+        top: auto;
+        width: 100%;
+        margin-top: 10px;
+        justify-content: center;
+    }
+
+    .btn-pick-location-main {
+        padding: 18px;
+        font-size: 15px;
+    }
+
+    .btn-change-location {
+        flex: 1;
+        justify-content: center;
     }
 }
 
@@ -461,5 +847,125 @@
     .btn {
         width: 100%;
         justify-content: center;
+    }
+
+    /* Ultra Mobile Map Modal */
+    .map-modal {
+        padding: 0;
+    }
+
+    .map-modal-content {
+        border-radius: 0;
+        max-height: 100vh;
+        height: 100vh;
+    }
+
+    .map-modal-body {
+        max-height: calc(100vh - 160px);
+    }
+
+    .map-modal-header {
+        padding: 12px 16px;
+    }
+
+    .map-modal-header h3 {
+        font-size: 16px;
+    }
+
+    .map-modal-close {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+    }
+
+    .map-search-container {
+        padding: 10px 12px;
+    }
+
+    .mapboxgl-ctrl-geocoder input {
+        height: 40px;
+        font-size: 13px;
+    }
+
+    .map-container {
+        height: 100%;
+        min-height: auto;
+        flex: 1;
+    }
+
+    .map-info {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .map-modal-footer {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .btn-cancel,
+    .btn-confirm {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    .btn-pick-location-main {
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    .btn-pick-location-main i {
+        font-size: 18px;
+    }
+}
+
+/* Landscape Mobile Orientation */
+@media (max-width: 896px) and (orientation: landscape) {
+    .map-modal-content {
+        max-height: 100vh;
+        height: 100vh;
+    }
+
+    .map-modal-header {
+        padding: 10px 16px;
+    }
+
+    .map-modal-header h3 {
+        font-size: 16px;
+    }
+
+    .map-search-container {
+        padding: 8px 12px;
+    }
+
+    .map-container {
+        height: 100%;
+        flex: 1;
+    }
+
+    .map-info {
+        display: none; /* Hide info banner in landscape for more map space */
+    }
+
+    .map-modal-footer {
+        padding: 10px 12px;
+    }
+}
+
+/* Tablet Responsive */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .map-modal-content {
+        width: 95%;
+        max-width: 800px;
+        max-height: 80vh;
+    }
+
+    .map-container {
+        height: 320px;
+        min-height: 320px;
+    }
+
+    .map-modal-body {
+        max-height: calc(80vh - 180px);
     }
 }

@@ -31,8 +31,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         goto end_register;
     }
 
-    if (strlen($password) < 6) {
-        $message = "❌ Password must be at least 6 characters long.";
+    if (strlen($password) < 8 || strlen($password) > 20) {
+        $message = "❌ Password must be between 8 and 20 characters long.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        goto end_register;
+    }
+
+    if (!preg_match('/[A-Z]/', $password)) {
+        $message = "❌ Password must contain at least one uppercase letter.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        goto end_register;
+    }
+
+    if (!preg_match('/[a-z]/', $password)) {
+        $message = "❌ Password must contain at least one lowercase letter.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        goto end_register;
+    }
+
+    if (!preg_match('/[0-9]/', $password)) {
+        $message = "❌ Password must contain at least one number.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        goto end_register;
+    }
+
+    if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        $message = "❌ Password must contain at least one special character (!@#$%^&*(),.?\":{}|<>).";
         if ($is_ajax) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => $message]);
@@ -111,7 +151,8 @@ $conn->close();
         <div class="login-container">
             <?php if (!empty($message)): ?>
                 <div class="<?php echo strpos($message, '✅') !== false ? 'success-message' : 'error-message'; ?>">
-                    <i class="fas <?php echo strpos($message, '✅') !== false ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
+                    <i
+                        class="fas <?php echo strpos($message, '✅') !== false ? 'fa-check-circle' : 'fa-exclamation-circle'; ?>"></i>
                     <?php echo $message; ?>
                 </div>
             <?php endif; ?>
@@ -153,10 +194,14 @@ $conn->close();
                             <i class="fas fa-lock"></i>
                         </span>
                         <input type="password" id="password" name="password" placeholder=" " required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('password', 'toggleIcon1')">
+                        <button type="button" class="password-toggle"
+                            onclick="togglePassword('password', 'toggleIcon1')">
                             <i class="fas fa-eye" id="toggleIcon1"></i>
                         </button>
                     </div>
+                    <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">
+                        Must be 8-20 characters with uppercase, lowercase, number, and special character
+                    </small>
                 </div>
 
                 <div class="input-group password-group">
@@ -169,7 +214,8 @@ $conn->close();
                             <i class="fas fa-lock"></i>
                         </span>
                         <input type="password" id="confirm_password" name="confirm_password" placeholder=" " required>
-                        <button type="button" class="password-toggle" onclick="togglePassword('confirm_password', 'toggleIcon2')">
+                        <button type="button" class="password-toggle"
+                            onclick="togglePassword('confirm_password', 'toggleIcon2')">
                             <i class="fas fa-eye" id="toggleIcon2"></i>
                         </button>
                     </div>
@@ -203,6 +249,47 @@ $conn->close();
                 toggleIcon.className = 'fas fa-eye';
             }
         }
+
+        document.querySelector('form').addEventListener('submit', function (e) {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (password.length < 8 || password.length > 20) {
+                e.preventDefault();
+                alert('❌ Password must be between 8 and 20 characters long.');
+                return false;
+            }
+
+            if (!/[A-Z]/.test(password)) {
+                e.preventDefault();
+                alert('❌ Password must contain at least one uppercase letter.');
+                return false;
+            }
+
+            if (!/[a-z]/.test(password)) {
+                e.preventDefault();
+                alert('❌ Password must contain at least one lowercase letter.');
+                return false;
+            }
+
+            if (!/[0-9]/.test(password)) {
+                e.preventDefault();
+                alert('❌ Password must contain at least one number.');
+                return false;
+            }
+
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                e.preventDefault();
+                alert('❌ Password must contain at least one special character (!@#$%^&*(),.?":{}|<>).');
+                return false;
+            }
+
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                alert('❌ Passwords do not match.');
+                return false;
+            }
+        });
     </script>
 </body>
 

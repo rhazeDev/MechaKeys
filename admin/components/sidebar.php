@@ -31,6 +31,10 @@
                 <i class="fas fa-plus-circle"></i>
                 <span>Add New Product</span>
             </a>
+            <a href="#" class="nav-item" data-section="delivery-riders">
+                <i class="fas fa-users"></i>
+                <span>Delivery Riders</span>
+            </a>
         </div>
     </nav>
 </aside>

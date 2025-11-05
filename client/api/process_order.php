@@ -23,6 +23,11 @@ if (empty($user['Contact']) || empty($user['Address'])) {
     exit;
 }
 
+if (!preg_match('/^09\d{9}$/', $user['Contact'])) {
+    echo json_encode(['success' => false, 'message' => 'Invalid contact number format. Please update your profile.']);
+    exit;
+}
+
 $order_notes = isset($_POST['order_notes']) ? trim($_POST['order_notes']) : '';
 $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'cod';
 

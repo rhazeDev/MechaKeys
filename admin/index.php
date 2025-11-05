@@ -51,6 +51,7 @@ $total_revenue = $conn->query("SELECT SUM(TotalAmount) as total FROM orders o JO
                 <?php include 'components/products.php'; ?>
                 <?php include 'components/inventory.php'; ?>
                 <?php include 'components/add_product.php'; ?>
+                <?php include 'components/delivery_riders.php'; ?>
             </div>
         </main>
     </div>

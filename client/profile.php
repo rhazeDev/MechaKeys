@@ -12,7 +12,7 @@ $user_id = $_SESSION['user_id'];
 $message = '';
 $error = '';
 
-$stmt = $conn->prepare("SELECT FullName, Email, Contact, Address FROM users WHERE ID = ?");
+$stmt = $conn->prepare("SELECT FullName, Email, Contact, Address, Location FROM users WHERE ID = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -23,23 +23,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'update_profile') {
         $contact = trim($_POST['contact']);
         $address = trim($_POST['address']);
+        $location = trim($_POST['location']);
 
-        $update_stmt = $conn->prepare("UPDATE users SET Contact = ?, Address = ? WHERE ID = ?");
-        $update_stmt->bind_param("ssi", $contact, $address, $user_id);
-
-        if ($update_stmt->execute()) {
-            $message = 'Profile updated successfully!';
-            $user['Contact'] = $contact;
-            $user['Address'] = $address;
-
-            if (!empty($contact) && !empty($address) && isset($_GET['from']) && $_GET['from'] === 'checkout') {
-                header('Location: checkout.php');
-                exit;
-            }
+        if (!preg_match('/^09\d{9}$/', $contact)) {
+            $error = 'Invalid contact number. Must start with 09 and be exactly 11 digits long.';
+        } elseif (empty($address)) {
+            $error = 'Address is required.';
         } else {
-            $error = 'Failed to update profile. Please try again.';
+            $update_stmt = $conn->prepare("UPDATE users SET Contact = ?, Address = ?, Location = ? WHERE ID = ?");
+            $update_stmt->bind_param("sssi", $contact, $address, $location, $user_id);
+
+            if ($update_stmt->execute()) {
+                $message = 'Profile updated successfully!';
+                $user['Contact'] = $contact;
+                $user['Address'] = $address;
+                $user['Location'] = $location;
+
+                if (!empty($contact) && !empty($address) && isset($_GET['from']) && $_GET['from'] === 'checkout') {
+                    header('Location: checkout.php');
+                    exit;
+                }
+            } else {
+                $error = 'Failed to update profile. Please try again.';
+            }
+            $update_stmt->close();
         }
-        $update_stmt->close();
     }
 
     if ($_POST['action'] === 'change_password') {
@@ -86,6 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <link href="../css/profile.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="images/favicon.png" type="image/png">
+    <!-- Mapbox CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script
+        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet"
+        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
+        type="text/css">
 </head>
 
 <body>
@@ -151,6 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                     <form method="POST" class="profile-form">
                         <input type="hidden" name="action" value="update_profile">
+                        <input type="hidden" name="location" id="location"
+                            value="<?php echo htmlspecialchars($user['Location'] ?? ''); ?>">
 
                         <div class="form-grid">
                             <div class="form-group full-width">
@@ -179,8 +197,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     Contact Number
                                 </label>
                                 <input type="text" id="contact" name="contact" class="form-input"
-                                    value="<?php echo htmlspecialchars($user['Contact']); ?>"
-                                    placeholder="Enter your contact number" required>
+                                    value="<?php echo htmlspecialchars($user['Contact']); ?>" placeholder="09XXXXXXXXX"
+                                    pattern="^09\d{9}$" maxlength="11" required>
+                                <small class="form-hint">Must start with 09 and be exactly 11 digits (e.g.,
+                                    09123456789)</small>
                             </div>
 
                             <div class="form-group full-width">
@@ -188,9 +208,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                     <i class="fas fa-map-marker-alt"></i>
                                     Address
                                 </label>
-                                <textarea id="address" name="address" class="form-input form-textarea" rows="4"
-                                    placeholder="Enter your complete address"
-                                    required><?php echo htmlspecialchars($user['Address']); ?></textarea>
+
+                                <!-- Pick Location Button (shown when no address) -->
+                                <div id="pickLocationContainer"
+                                    style="<?php echo !empty($user['Address']) ? 'display: none;' : ''; ?>">
+                                    <button type="button" class="btn-pick-location-main" onclick="openMapModal()">
+                                        <i class="fas fa-map-marked-alt"></i>
+                                        Pick Location on Map
+                                    </button>
+                                    <small class="form-hint">Click to select your address on the map</small>
+                                </div>
+
+                                <!-- Address Field (shown after picking location) -->
+                                <div id="addressFieldContainer"
+                                    style="<?php echo empty($user['Address']) ? 'display: none;' : ''; ?>">
+                                    <textarea id="address" name="address" class="form-input form-textarea" rows="4"
+                                        placeholder="Your address from map" style="resize: vertical;"
+                                        required><?php echo htmlspecialchars($user['Address']); ?></textarea>
+                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                        <button type="button" class="btn-change-location" onclick="openMapModal()">
+                                            <i class="fas fa-map-marked-alt"></i>
+                                            Change Location
+                                        </button>
+                                    </div>
+                                    <small class="form-hint">You can edit the address or change location on the
+                                        map</small>
+                                </div>
                             </div>
                         </div>
 
@@ -272,9 +315,211 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             </div>
         </div>
+
+        <!-- Map Modal -->
+        <div id="mapModal" class="map-modal">
+            <div class="map-modal-content">
+                <div class="map-modal-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> Pick Your Location</h3>
+                    <button type="button" class="map-modal-close" onclick="closeMapModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="map-modal-body">
+                    <div class="map-search-container">
+                        <div id="geocoder" class="geocoder"></div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                    <div class="map-info">
+                        <i class="fas fa-info-circle"></i>
+                        Click on the map or search for a location to set your address
+                    </div>
+                </div>
+                <div class="map-modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeMapModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn-confirm" onclick="confirmLocation()">
+                        <i class="fas fa-check"></i> Confirm Location
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoicmhhemUiLCJhIjoiY21memQycHB5MDFybzJrc2d2MXZiejJ6bCJ9.SO6KCjBMT50xiSTvRy0cIw';
+        let map;
+        let marker;
+        let selectedLocation = {
+            lng: null,
+            lat: null,
+            address: ''
+        };
+
+        function initMap() {
+            const defaultCenter = [120.5935, 18.1978];
+            const existingLocation = document.getElementById('location').value;
+            let center = defaultCenter;
+
+            if (existingLocation) {
+                const coords = existingLocation.split(',');
+                if (coords.length === 2) {
+                    center = [parseFloat(coords[0]), parseFloat(coords[1])];
+                }
+            }
+
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: center,
+                zoom: 14
+            });
+
+            map.on('load', function () {
+                console.log('Map loaded successfully');
+            });
+
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+            const geocoder = new MapboxGeocoder({
+                accessToken: mapboxgl.accessToken,
+                mapboxgl: mapboxgl,
+                marker: false,
+                placeholder: 'Search for your address...',
+                countries: 'ph', proximity: {
+                    longitude: 120.5935,
+                    latitude: 18.1978
+                }
+            });
+
+            document.getElementById('geocoder').appendChild(geocoder.onAdd(map));
+
+            marker = new mapboxgl.Marker({
+                draggable: true,
+                color: '#ff4444'
+            })
+                .setLngLat(center)
+                .addTo(map);
+
+            marker.on('dragend', function () {
+                const lngLat = marker.getLngLat();
+                updateSelectedLocation(lngLat.lng, lngLat.lat);
+            });
+
+            map.on('click', function (e) {
+                marker.setLngLat([e.lngLat.lng, e.lngLat.lat]);
+                updateSelectedLocation(e.lngLat.lng, e.lngLat.lat);
+            });
+
+            geocoder.on('result', function (e) {
+                const lngLat = e.result.center;
+                marker.setLngLat(lngLat);
+                selectedLocation.lng = lngLat[0];
+                selectedLocation.lat = lngLat[1];
+                selectedLocation.address = e.result.place_name;
+            });
+
+            updateSelectedLocation(center[0], center[1]);
+        }
+
+        async function updateSelectedLocation(lng, lat) {
+            selectedLocation.lng = lng;
+            selectedLocation.lat = lat;
+
+            try {
+                const response = await fetch(
+                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`
+                );
+                const data = await response.json();
+                if (data.features && data.features.length > 0) {
+                    selectedLocation.address = data.features[0].place_name;
+                }
+            } catch (error) {
+                console.error('Error reverse geocoding:', error);
+                selectedLocation.address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            }
+        }
+
+        function openMapModal() {
+            const modal = document.getElementById('mapModal');
+            modal.style.display = 'flex';
+
+            setTimeout(() => {
+                if (!map) {
+                    console.log('Initializing map...');
+                    initMap();
+                } else {
+                    console.log('Resizing existing map...');
+                    map.resize();
+                }
+            }, 300);
+        }
+
+        function closeMapModal() {
+            document.getElementById('mapModal').style.display = 'none';
+        }
+
+        function confirmLocation() {
+            if (selectedLocation.lng && selectedLocation.lat) {
+                document.getElementById('address').value = selectedLocation.address;
+
+                document.getElementById('location').value = `${selectedLocation.lng},${selectedLocation.lat}`;
+
+                document.getElementById('pickLocationContainer').style.display = 'none';
+                document.getElementById('addressFieldContainer').style.display = 'block';
+
+                closeMapModal();
+            } else {
+                alert('Please select a location on the map');
+            }
+        }
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('mapModal');
+            if (event.target === modal) {
+                closeMapModal();
+            }
+        }
+
+        const contactInput = document.getElementById('contact');
+        if (contactInput) {
+            contactInput.addEventListener('input', function (e) {
+                this.value = this.value.replace(/\D/g, '');
+
+                if (this.value.length > 11) {
+                    this.value = this.value.slice(0, 11);
+                }
+            });
+
+            contactInput.addEventListener('blur', function (e) {
+                const value = this.value;
+                if (value && !value.match(/^09\d{9}$/)) {
+                    this.setCustomValidity('Contact number must start with 09 and be exactly 11 digits long.');
+                    this.reportValidity();
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+
+            contactInput.addEventListener('input', function (e) {
+                this.setCustomValidity('');
+            });
+        }
+
+        const profileForm = document.querySelector('form[action=""][method="POST"]');
+        if (profileForm && profileForm.querySelector('input[name="action"][value="update_profile"]')) {
+            profileForm.addEventListener('submit', function (e) {
+                const contact = document.getElementById('contact').value;
+
+                if (!contact.match(/^09\d{9}$/)) {
+                    e.preventDefault();
+                    alert('❌ Invalid contact number. Must start with 09 and be exactly 11 digits long (e.g., 09123456789)');
+                    return false;
+                }
+            });
+        }
+
         document.querySelectorAll('.profile-nav-item[data-tab]').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.preventDefault();

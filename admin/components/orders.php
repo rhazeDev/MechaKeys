@@ -153,3 +153,42 @@
         </div>
     </div>
 </div>
+
+<!-- Ready to Deliver Modal with Delivery Person Selection -->
+<div id="readyToDeliverModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-truck"></i> Mark as Ready to Deliver</h3>
+            <button class="modal-close" onclick="closeReadyToDeliverModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="readyToDeliverForm" onsubmit="submitReadyToDeliver(event)">
+                <input type="hidden" id="readyOrderId" name="order_id">
+                <input type="hidden" id="readyTrackingId" name="tracking_id">
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        Assign to Delivery Rider 
+                        <span class="required">*</span>
+                    </label>
+                    <select id="readyDeliveryRider" name="delivery_rider_id" class="form-select" required>
+                        <option value="">-- Select Rider --</option>
+                    </select>
+                    <small style="color: #666; font-size: 13px; margin-top: 4px;">Choose the delivery person who will handle this order</small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeReadyToDeliverModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+

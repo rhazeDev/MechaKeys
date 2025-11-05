@@ -49,6 +49,8 @@ function showSection(sectionId) {
         loadInventory();
     } else if (sectionId === 'orders') {
         loadOrders();
+    } else if (sectionId === 'delivery-riders') {
+        loadDeliveryRiders();
     }
 }
 
@@ -743,6 +745,15 @@ window.onclick = function (event) {
     if (event.target.classList.contains('modal')) {
         event.target.classList.remove('active');
     }
+    if (event.target.id === 'readyToDeliverModal') {
+        closeReadyToDeliverModal();
+    }
+    if (event.target.id === 'assignDeliveryModal') {
+        closeAssignDeliveryModal();
+    }
+    if (event.target.id === 'orderDetailsModal') {
+        closeOrderDetailsModal();
+    }
 }
 
 
@@ -843,34 +854,64 @@ function refreshOrders() {
 }
 
 async function setOrderReadyToDeliver(orderId, trackingId) {
-    showCustomConfirm(
-        'Mark this order as <span style="color:#4CAF50;font-weight:600;">Ready to Deliver</span>?<br><small>The order will be ready for pickup by delivery rider.</small>',
-        async () => {
-            try {
-                const formData = new FormData();
-                formData.append('order_id', orderId);
-                formData.append('tracking_id', trackingId);
-                formData.append('delivery_status', 'Ready to Deliver');
-                formData.append('payment_status', 'Pending');
-                const response = await fetch('api/update_order_status.php', {
-                    method: 'POST',
-                    body: formData
-                });
+    const modal = document.getElementById('readyToDeliverModal');
+    document.getElementById('readyOrderId').value = orderId;
+    document.getElementById('readyTrackingId').value = trackingId;
 
-                const result = await response.json();
+    const select = document.getElementById('readyDeliveryRider');
+    select.innerHTML = '<option value="">-- Loading riders... --</option>';
 
-                if (result.success) {
-                    showToast('Order marked as Ready to Deliver', 'success', 'Status Updated');
-                    refreshOrders();
-                } else {
-                    showError(result.message || 'Failed to update order status', 'Update Failed');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('An error occurred while updating the order', 'Error');
-            }
+    try {
+        const response = await fetch('api/get_delivery_riders.php');
+        const riders = await response.json();
+
+        if (riders && riders.length > 0) {
+            select.innerHTML = '<option value="">-- Select Rider --</option>' +
+                riders.map(rider => `<option value="${rider.ID}">${rider.FullName} (${rider.Email})</option>`).join('');
+        } else {
+            select.innerHTML = '<option value="">-- No riders available --</option>';
+            showError('No delivery riders found. Please add delivery users first.', 'No Riders');
         }
-    );
+    } catch (error) {
+        console.error('Error loading riders:', error);
+        select.innerHTML = '<option value="">-- Error loading riders --</option>';
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeReadyToDeliverModal() {
+    const modal = document.getElementById('readyToDeliverModal');
+    modal.style.display = 'none';
+    document.getElementById('readyToDeliverForm').reset();
+}
+
+async function submitReadyToDeliver(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    formData.append('delivery_status', 'Ready to Deliver');
+    formData.append('payment_status', 'Pending');
+
+    try {
+        const response = await fetch('api/update_order_status.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeReadyToDeliverModal();
+            showToast('Order marked as Ready to Deliver and assigned to rider', 'success', 'Status Updated');
+            refreshOrders();
+        } else {
+            showError(result.message || 'Failed to update order status', 'Update Failed');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while updating the order', 'Error');
+    }
 }
 
 async function viewOrderDetails(orderId) {
@@ -1077,5 +1118,203 @@ window.addEventListener('click', function (event) {
     if (event.target.id === 'assignDeliveryModal') {
         closeAssignDeliveryModal();
     }
+    if (event.target.id === 'addRiderModal') {
+        closeAddRiderModal();
+    }
+    if (event.target.id === 'editRiderModal') {
+        closeEditRiderModal();
+    }
 });
+
+
+async function loadDeliveryRiders() {
+    try {
+        const response = await fetch('api/get_riders.php');
+        const result = await response.json();
+
+        if (result.success) {
+            document.getElementById('totalRidersCount').textContent = result.stats.total || 0;
+            document.getElementById('activeRidersCount').textContent = result.stats.active || 0;
+            document.getElementById('assignedDeliveriesCount').textContent = result.stats.activeDeliveries || 0;
+            document.getElementById('completedDeliveriesCount').textContent = result.stats.completedToday || 0;
+
+            const tbody = document.getElementById('ridersTableBody');
+            if (result.riders && result.riders.length > 0) {
+                tbody.innerHTML = result.riders.map(rider => {
+                    const statusBadge = rider.ActiveDeliveries > 0
+                        ? '<span class="badge success">Active</span>'
+                        : '<span class="badge default">Inactive</span>';
+
+                    return `
+                        <tr>
+                            <td>#${String(rider.ID).padStart(4, '0')}</td>
+                            <td><strong>${rider.FullName}</strong></td>
+                            <td>${rider.Email}</td>
+                            <td>${rider.Contact}</td>
+                            <td>${rider.Address}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <span class="badge ${rider.ActiveDeliveries > 0 ? 'warning' : 'default'}">
+                                    ${rider.ActiveDeliveries} ${rider.ActiveDeliveries === 1 ? 'delivery' : 'deliveries'}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon btn-edit" onclick="openEditRiderModal(${rider.ID})" title="Edit Rider">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <!-- <button class="btn-icon btn-delete" onclick="deleteRider(${rider.ID}, '${rider.FullName}')" title="Delete Rider">
+                                        <i class="fas fa-trash"></i>
+                                    </button> -->
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No delivery riders found</td></tr>';
+            }
+        } else {
+            showError(result.message || 'Failed to load riders', 'Load Failed');
+        }
+    } catch (error) {
+        console.error('Failed to load riders:', error);
+        document.getElementById('ridersTableBody').innerHTML =
+            '<tr><td colspan="8" class="text-center" style="color: red;">Failed to load delivery riders</td></tr>';
+    }
+}
+
+function refreshRiders() {
+    loadDeliveryRiders();
+}
+
+function openAddRiderModal() {
+    const modal = document.getElementById('addRiderModal');
+    modal.style.display = 'flex';
+    document.getElementById('addRiderForm').reset();
+}
+
+function closeAddRiderModal() {
+    const modal = document.getElementById('addRiderModal');
+    modal.style.display = 'none';
+    document.getElementById('addRiderForm').reset();
+}
+
+async function submitAddRider(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    try {
+        const response = await fetch('api/add_rider.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeAddRiderModal();
+            showToast(result.message, 'success', 'Rider Created');
+            loadDeliveryRiders();
+        } else {
+            showError(result.message || 'Failed to create rider account', 'Creation Failed');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while creating the rider account', 'Error');
+    }
+}
+
+async function openEditRiderModal(riderId) {
+    const modal = document.getElementById('editRiderModal');
+
+    try {
+        const response = await fetch('api/get_riders.php');
+        const result = await response.json();
+
+        if (result.success) {
+            const rider = result.riders.find(r => r.ID == riderId);
+
+            if (rider) {
+                document.getElementById('editRiderId').value = rider.ID;
+                document.getElementById('editRiderFullName').value = rider.FullName;
+                document.getElementById('editRiderEmail').value = rider.Email;
+                document.getElementById('editRiderContact').value = rider.Contact;
+                document.getElementById('editRiderAddress').value = rider.Address;
+
+                modal.style.display = 'flex';
+            } else {
+                showError('Rider not found', 'Error');
+            }
+        } else {
+            showError('Failed to load riders', 'Error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to load rider data', 'Error');
+    }
+}
+
+function closeEditRiderModal() {
+    const modal = document.getElementById('editRiderModal');
+    modal.style.display = 'none';
+    document.getElementById('editRiderForm').reset();
+}
+
+async function submitEditRider(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    try {
+        const response = await fetch('api/update_rider.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            closeEditRiderModal();
+            showToast(result.message, 'success', 'Rider Updated');
+            loadDeliveryRiders();
+        } else {
+            showError(result.message || 'Failed to update rider', 'Update Failed');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while updating the rider', 'Error');
+    }
+}
+
+async function deleteRider(riderId, riderName) {
+    showCustomConfirm(
+        `Are you sure you want to delete <strong>${riderName}</strong>?<br><small style="color: #f44336;">This action cannot be undone.</small>`,
+        async () => {
+            try {
+                const formData = new FormData();
+                formData.append('rider_id', riderId);
+
+                const response = await fetch('api/delete_rider.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message, 'success', 'Rider Deleted');
+                    loadDeliveryRiders();
+                } else {
+                    showError(result.message || 'Failed to delete rider', 'Delete Failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred while deleting the rider', 'Error');
+            }
+        }
+    );
+}
+
 
