@@ -213,12 +213,6 @@ $orders_stmt->close();
                                     <i class="fas fa-eye"></i>
                                     View Details
                                 </button>
-                                <?php if ($status === 'Delivered'): ?>
-                                    <button class="btn-secondary" onclick="alert('Review feature coming soon!')">
-                                        <i class="fas fa-star"></i>
-                                        Leave Review
-                                    </button>
-                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
