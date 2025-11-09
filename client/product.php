@@ -73,7 +73,13 @@ while ($var = $variations_result->fetch_assoc()) {
     }
 }
 
-$productName = $product['Brand'] . ' ' . $product['Model'];
+$brandVal = isset($product['Brand']) ? trim($product['Brand']) : '';
+
+if ($product['Category'] !== 'keyboard' && ($brandVal === '' || strtoupper($brandVal) === 'N/A')) {
+    $productName = $product['Model'];
+} else {
+    $productName = ($brandVal !== '' ? $brandVal . ' ' : '') . $product['Model'];
+}
 
 $isLoggedIn = isset($_SESSION['user_id']);
 ?>

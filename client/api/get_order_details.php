@@ -22,7 +22,8 @@ $order_sql = "SELECT
                 o.TotalAmount,
                 o.PlaceOrdered,
                 o.TrackingID,
-                t.DeliveryStatus,
+                    t.DeliveryStatus,
+                    t.DeliveryProof,
                 t.DeliveryPersonID,
                 dp.FullName as DeliveryPersonName,
                 dp.Contact as DeliveryPersonContact,
@@ -92,6 +93,11 @@ while ($row = $items_result->fetch_assoc()) {
 }
 
 $items_stmt->close();
+$delivery_proof = $order['DeliveryProof'] ?? null;
+if ($delivery_proof && strpos($delivery_proof, 'mechakeys/') === 0) {
+    $delivery_proof = substr($delivery_proof, strlen('mechakeys/'));
+}
+
 $conn->close();
 
 echo json_encode([
@@ -106,9 +112,10 @@ echo json_encode([
         'delivery_person' => $order['DeliveryPersonName'] ?? 'Not Assigned',
         'delivery_person_contact' => $order['DeliveryPersonContact'] ?? '',
         'delivery_person_id' => $order['DeliveryPersonID'],
-        'delivery_person_location' => $order['DeliveryPersonLocation'] ?? '',
-        'customer_location' => $order['CustomerLocation'] ?? '',
-        'address' => $order['Address']
+    'delivery_person_location' => $order['DeliveryPersonLocation'] ?? '',
+    'customer_location' => $order['CustomerLocation'] ?? '',
+    'delivery_proof' => $delivery_proof ?? null,
+    'address' => $order['Address']
     ],
     'items' => $order_items
 ]);

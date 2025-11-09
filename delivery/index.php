@@ -214,6 +214,57 @@ $rider_query->close();
         </div>
     </div>
 
+    <!-- Proof of Delivery Modal -->
+    <div id="proofOfDeliveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-camera"></i> Capture Proof of Delivery</h2>
+                <button class="modal-close" onclick="closeModal('proofOfDeliveryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="proof-of-delivery-container">
+                    <p style="color: #64748b; margin-bottom: 1.5rem; text-align: center;">
+                        <i class="fas fa-info-circle"></i> 
+                        Please capture a photo as proof of delivery with your location
+                    </p>
+                    
+                    <div id="cameraPreview" style="margin-bottom: 1rem; text-align: center;">
+                        <video id="videoStream" style="width: 100%; max-width: 400px; border-radius: 8px; background: #000; display: none;"></video>
+                        <canvas id="captureCanvas" style="width: 100%; max-width: 400px; border-radius: 8px; display: none;"></canvas>
+                        <div id="noCameraMessage" style="padding: 2rem; background: #fef2f2; border: 2px solid #fca5a5; border-radius: 8px; color: #991b1b;">
+                            <i class="fas fa-camera-slash" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                            <p>Camera not accessible on this device.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="camera-controls" style="margin-bottom: 1rem; display: flex; gap: 0.5rem; justify-content: center;">
+                        <button id="captureBtnCamera" class="btn btn-success btn-sm" style="display: none;" title="Capture Photo">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <button id="retakeBtnCamera" class="btn btn-warning btn-sm" style="display: none;" title="Retake Photo">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="capturedImagePreview" style="display: none; margin-bottom: 1rem; text-align: center;">
+                        <img id="capturedImage" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid #10b981;">
+                        <p style="margin-top: 0.5rem; color: #059669; font-weight: 600;">
+                            <i class="fas fa-check-circle"></i> Photo captured successfully
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('proofOfDeliveryModal')">Cancel</button>
+                <button id="submitProofBtn" class="btn btn-success" onclick="submitProofOfDelivery()">
+                    <i class="fas fa-check"></i> Submit Proof
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Set Your Location Modal -->
     <div id="setLocationModal" class="modal">
         <div class="modal-content">

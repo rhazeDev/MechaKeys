@@ -80,10 +80,16 @@ session_start();
             });
         });
 
+        
         document.querySelectorAll('.collection-card').forEach(card => {
-            card.addEventListener('click', function() {
-                alert('Navigating to collection...');
-            });
+            if (card.tagName.toLowerCase() !== 'a') {
+                card.addEventListener('click', function() {
+                    const layout = card.querySelector('.collection-icon') ? card.querySelector('.collection-icon').innerText : '';
+                    
+                    const layoutParam = layout.replace('%', 'pct');
+                    window.location.href = 'index.php?category=keyboard&layout=' + encodeURIComponent(layoutParam);
+                });
+            }
         });
     </script>
 </body>

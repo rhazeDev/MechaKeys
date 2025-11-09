@@ -15,6 +15,7 @@ $orders_sql = "SELECT
                 o.PlaceOrdered,
                 o.TrackingID,
                 t.DeliveryStatus,
+                t.DeliveryProof,
                 t.LastUpdated,
                 t.DeliveryPersonID,
                 u.FullName as DeliveryPersonName,
@@ -170,6 +171,19 @@ $orders_stmt->close();
                                             <?php endif; ?>
                                         </span>
                                     </div>
+                                <?php endif; ?>
+
+                                <?php if ($status === 'Delivered' && !empty($order['DeliveryProof'])):
+                                    $proofPath = $order['DeliveryProof'];
+                                    if ($proofPath && strpos($proofPath, 'mechakeys/') === 0) {
+                                        $proofPath = substr($proofPath, strlen('mechakeys/'));
+                                    }
+                                ?>
+                                <div class="delivery-proof-thumb" style="margin: 1rem 0;">
+                                    <a href="../<?php echo htmlspecialchars($proofPath, ENT_QUOTES); ?>" target="_blank" rel="noopener">
+                                        <img src="../<?php echo htmlspecialchars($proofPath, ENT_QUOTES); ?>" alt="Proof of Delivery" style="max-width:160px; border-radius:8px; border:1px solid #e5e7eb;">
+                                    </a>
+                                </div>
                                 <?php endif; ?>
 
                                 <div class="tracking-timeline">
@@ -484,6 +498,16 @@ $orders_stmt->close();
                             <i class="fas fa-map-marked-alt"></i>
                             View Order Location
                         </button>
+                    </div>
+                    ` : ''}
+                    ${order.delivery_proof ? `
+                    <div class="modal-section">
+                        <h3><i class="fas fa-image"></i> Proof of Delivery</h3>
+                        <div style="margin-top:0.5rem;">
+                            <a href="../${order.delivery_proof}" target="_blank" rel="noopener">
+                                <img src="../${order.delivery_proof}" alt="Proof of Delivery" style="max-width:240px; border-radius:8px; border:1px solid #e5e7eb;">
+                            </a>
+                        </div>
                     </div>
                     ` : ''}
                 </div>

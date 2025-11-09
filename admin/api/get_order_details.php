@@ -28,6 +28,7 @@ $order_query = "SELECT
                     u.Contact as CustomerContact,
                     u.Address as CustomerAddress,
                     t.DeliveryStatus,
+                    t.DeliveryProof,
                     t.LastUpdated,
                     t.DeliveryPersonID,
                     p.Status as PaymentStatus,

@@ -36,6 +36,70 @@ if (!isset($status_mapping[$new_status])) {
 
 $mapped_status = $status_mapping[$new_status];
 
+$proof_image_path = null;
+if ($new_status === 'Delivered' && isset($_FILES['proof_image'])) {
+    $file = $_FILES['proof_image'];
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        echo json_encode(['success' => false, 'message' => 'Upload error: ' . $file['error']]);
+        exit;
+    }
+
+    if ($file['size'] == 0) {
+        echo json_encode(['success' => false, 'message' => 'Empty file uploaded']);
+        exit;
+    }
+
+    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $file_type = $file['type'];
+
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!in_array($file_type, $allowed_types) && !in_array($file_extension, $allowed_extensions)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid image type. Allowed: JPG, PNG, GIF, WebP']);
+        exit;
+    }
+
+    if ($file['size'] > 5 * 1024 * 1024) {
+        echo json_encode(['success' => false, 'message' => 'File size too large (max 5MB)']);
+        exit;
+    }
+
+    $upload_dir = '../../proofofdelivery';
+    if (!is_dir($upload_dir)) {
+        if (!@mkdir($upload_dir, 0755, true)) {
+            echo json_encode(['success' => false, 'message' => 'Failed to create upload directory']);
+            exit;
+        }
+    }
+
+    if (!is_writable($upload_dir)) {
+        echo json_encode(['success' => false, 'message' => 'Upload directory not writable']);
+        exit;
+    }
+
+    $timestamp = time();
+    $random_str = bin2hex(random_bytes(4));
+    $filename = "proof_{$tracking_id}_{$timestamp}_{$random_str}.jpg";
+    $file_path = $upload_dir . '/' . $filename;
+
+    if (!move_uploaded_file($file['tmp_name'], $file_path)) {
+        $error_msg = 'Failed to save image';
+        if (!is_uploaded_file($file['tmp_name'])) {
+            $error_msg = 'Invalid upload - not from HTTP POST';
+        }
+        echo json_encode(['success' => false, 'message' => $error_msg]);
+        exit;
+    }
+
+    if (!file_exists($file_path)) {
+        echo json_encode(['success' => false, 'message' => 'File creation verification failed']);
+        exit;
+    }
+
+    $proof_image_path = 'mechakeys/proofofdelivery/' . $filename;
+}
+
 $conn->begin_transaction();
 
 try {
@@ -57,8 +121,13 @@ try {
         $check_assignment->close();
     }
 
-    $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, LastUpdated = NOW() WHERE TrackingID = ?");
-    $update_tracking->bind_param("si", $mapped_status, $tracking_id);
+    if ($new_status === 'Delivered' && $proof_image_path) {
+        $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, DeliveryProof = ?, LastUpdated = NOW() WHERE TrackingID = ?");
+        $update_tracking->bind_param("ssi", $mapped_status, $proof_image_path, $tracking_id);
+    } else {
+        $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, LastUpdated = NOW() WHERE TrackingID = ?");
+        $update_tracking->bind_param("si", $mapped_status, $tracking_id);
+    }
 
     if (!$update_tracking->execute()) {
         throw new Exception('Failed to update tracking status');
@@ -102,6 +171,11 @@ try {
 
 } catch (Exception $e) {
     $conn->rollback();
+
+    if ($proof_image_path && file_exists($upload_dir . '/' . $filename)) {
+        unlink($upload_dir . '/' . $filename);
+    }
+
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 

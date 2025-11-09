@@ -13,11 +13,11 @@ $brands = [
     <h2 class="section-title">
         Featured Brands
     </h2>
-    <div class="brands-grid">
+    <div class="brands-row">
         <?php foreach ($brands as $brand): ?>
-            <div class="brand-card">
+            <a href="index.php?category=keyboard&brand=<?php echo urlencode($brand['name']); ?>" class="brand-card" title="<?php echo htmlspecialchars($brand['name']); ?>">
                 <img src="images/brands/<?php echo $brand['image']; ?>" alt="<?php echo $brand['name']; ?>" class="brand-logo">
-            </div>
+            </a>
         <?php endforeach; ?>
     </div>
 </section>

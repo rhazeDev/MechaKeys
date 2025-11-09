@@ -55,6 +55,106 @@
             </div>
         </div>
 
+                <!-- Proof of Delivery Modal (top-level) -->
+                <div id="proofModal" class="modal">
+                    <div class="modal-content" style="width: 90%; max-width: 800px;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-image"></i> Proof of Delivery</h3>
+                            <button class="modal-close" onclick="closeProofModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body" style="text-align: center;">
+                            <img id="proofImage" src="" alt="Proof of Delivery" style="max-width: 100%; max-height: 600px; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rider Statistics Modal (top-level) -->
+                <div id="riderStatsModal" class="modal">
+                    <div class="modal-content modal-large">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-user-tie"></i> Delivery Rider Statistics</h3>
+                            <button class="modal-close" onclick="closeRiderStatsModal()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" id="currentRiderId">
+                            <div class="detail-box" style="margin-bottom: 20px; display:flex; justify-content:space-between; align-items:center; gap: 10px;">
+                                <div style="flex:1">
+                                    <label>Rider</label>
+                                    <div id="riderNamePlaceholder" style="color: #666;">&nbsp;</div>
+                                </div>
+                                <div style="width:200px;">
+                                    <label>Filter</label>
+                                    <select id="riderStatsFilter" class="form-select" onchange="loadRiderStats(document.getElementById('currentRiderId').value)">
+                                        <option value="all">All</option>
+                                        <option value="month">This Month</option>
+                                        <option value="today">Today</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="stats-grid" style="margin-bottom: 30px;">
+                                <div class="stat-card-small">
+                                    <div class="stat-icon-small primary">
+                                        <i class="fas fa-box"></i>
+                                    </div>
+                                    <div>
+                                        <div class="stat-value-small" id="statsTotal">0</div>
+                                        <div class="stat-label-small">Total Packages</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card-small">
+                                    <div class="stat-icon-small success">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div>
+                                        <div class="stat-value-small" id="statsSuccessful">0</div>
+                                        <div class="stat-label-small">Successful</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card-small">
+                                    <div class="stat-icon-small info">
+                                        <i class="fas fa-truck"></i>
+                                    </div>
+                                    <div>
+                                        <div class="stat-value-small" id="statsInProgress">0</div>
+                                        <div class="stat-label-small">In Progress</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h4 style="margin-bottom: 15px;"><i class="fas fa-list"></i> Recent Deliveries</h4>
+                            <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Proof</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="riderDeliveriesBody">
+                                        <tr>
+                                            <td colspan="6" style="text-align: center; padding: 20px;">
+                                                <i class="fas fa-spinner fa-spin"></i> Loading...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeRiderStatsModal()">Close</button>
+                        </div>
+                    </div>
+                </div>
+
         <!-- Riders Table -->
         <div class="table-container">
             <table class="data-table">
@@ -70,6 +170,7 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
+ 
                 <tbody id="ridersTableBody">
                     <tr>
                         <td colspan="8" class="text-center">

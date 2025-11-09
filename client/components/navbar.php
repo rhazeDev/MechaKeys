@@ -19,9 +19,14 @@ if ($isLoggedIn) {
         <a href="index.php" class="navbar-logo">
             <img src="images/logo.png" width="250px" height="40px">
         </a>
-        
-        <div class="navbar-search">
-            <input type="text" class="search-input" placeholder="Search keyboards, brands...">
+
+        <div class="navbar-search" style="display:flex;align-items:center;gap:8px;">
+            <input id="site-search" type="text" class="search-input" placeholder="Search keyboards, brands..."
+                value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+            <button id="site-search-btn" class="btn-primary" type="button" style="padding:10px 12px;font-size:14px;"
+                aria-label="Search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+            </button>
         </div>
 
         <div class="navbar-actions">
@@ -47,7 +52,8 @@ if ($isLoggedIn) {
                         <div class="dropdown-menu">
                             <div class="dropdown-header">
                                 <i class="fas fa-user-circle"></i>
-                                <span class="user-email"><?php echo isset($_SESSION['email']) ? $_SESSION['email'] : 'user@example.com'; ?></span>
+                                <span
+                                    class="user-email"><?php echo isset($_SESSION['email']) ? $_SESSION['email'] : 'user@example.com'; ?></span>
                             </div>
                             <div class="dropdown-divider"></div>
                             <a href="profile.php" class="dropdown-item">
@@ -71,33 +77,70 @@ if ($isLoggedIn) {
             </div>
         </div>
     </div>
-    
+
     <?php
     $currentPage = basename($_SERVER['PHP_SELF']);
     if ($currentPage === 'index.php'):
-    ?>
-    <div class="navbar-menu">
-        <div class="navbar-container">
-            <div class="category-nav">
-                <a href="index.php" class="category-link <?php echo (!isset($_GET['category']) || $_GET['category'] == '') ? 'active' : ''; ?>">
-                    <span>All Products</span>
-                </a>
-                <a href="index.php?category=keyboard" class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'keyboard') ? 'active' : ''; ?>">
-                    <span>Keyboards</span>
-                </a>
-                <a href="index.php?category=switches" class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'switches') ? 'active' : ''; ?>">
-                    <span>Switches</span>
-                </a>
-                <a href="index.php?category=keycaps" class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'keycaps') ? 'active' : ''; ?>">
-                    <span>Keycaps</span>
-                </a>
-                <a href="index.php?category=accessories" class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'accessories') ? 'active' : ''; ?>">
-                    <span>Accessories</span>
-                </a>
+        ?>
+        <div class="navbar-menu">
+            <div class="navbar-container">
+                <div class="category-nav">
+                    <a href="index.php"
+                        class="category-link <?php echo (!isset($_GET['category']) || $_GET['category'] == '') ? 'active' : ''; ?>">
+                        <span>All Products</span>
+                    </a>
+                    <a href="index.php?category=keyboard"
+                        class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'keyboard') ? 'active' : ''; ?>">
+                        <span>Keyboards</span>
+                    </a>
+                    <a href="index.php?category=switches"
+                        class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'switches') ? 'active' : ''; ?>">
+                        <span>Switches</span>
+                    </a>
+                    <a href="index.php?category=keycaps"
+                        class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'keycaps') ? 'active' : ''; ?>">
+                        <span>Keycaps</span>
+                    </a>
+                    <a href="index.php?category=accessories"
+                        class="category-link <?php echo (isset($_GET['category']) && $_GET['category'] == 'accessories') ? 'active' : ''; ?>">
+                        <span>Accessories</span>
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
     <?php endif; ?>
 </nav>
 
 <?php include __DIR__ . '/auth_modal.php'; ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('site-search');
+        if (!searchInput) return;
+
+        function navigateWithSearch(q) {
+            const url = new URL(window.location.href);
+            const params = url.searchParams;
+            if (q && q.length > 0) {
+                params.set('search', q);
+            } else {
+                params.delete('search');
+            }
+            const target = window.location.pathname.split('/').pop() || 'index.php';
+            const qs = params.toString();
+            window.location.href = target + (qs ? ('?' + qs) : '');
+        }
+
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                navigateWithSearch(this.value.trim());
+            }
+        });
+
+        const searchBtn = document.getElementById('site-search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', function () {
+                navigateWithSearch(searchInput.value.trim());
+            });
+        }
+    });
+</script>

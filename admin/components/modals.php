@@ -35,6 +35,8 @@
     </div>
 </div>
 
+<!-- Proof of Delivery and Rider Statistics moved to delivery_riders.php to keep modals near their related UI -->
+
 <!-- Edit Product Modal -->
 <div id="editProductModal" class="modal">
     <div class="modal-content modal-large">

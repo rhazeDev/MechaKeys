@@ -4,6 +4,18 @@ require_once __DIR__ . '/../../conn.php';
 $isLoggedIn = isset($_SESSION['user_id']);
 
 $category = isset($_GET['category']) ? $_GET['category'] : '';
+$brandFilter = isset($_GET['brand']) ? trim($_GET['brand']) : '';
+$layoutRaw = isset($_GET['layout']) ? $_GET['layout'] : '';
+$layout = '';
+if (!empty($layoutRaw)) {
+    $layout = preg_replace('/[^0-9]/', '', $layoutRaw);
+}
+
+$searchRaw = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search = '';
+if (!empty($searchRaw)) {
+    $search = $searchRaw;
+}
 
 $sql = "SELECT 
             p.ProductID,
@@ -19,18 +31,52 @@ $sql = "SELECT
         FROM Products p
         LEFT JOIN ProductVariations pv ON p.ProductID = pv.ProductID";
 
+$where = [];
+$params = [];
+$types = '';
 if (!empty($category)) {
-    $sql .= " WHERE p.Category = ?";
+    $where[] = "p.Category = ?";
+    $params[] = $category;
+    $types .= 's';
+}
+if (!empty($layout)) {
+    $where[] = "pv.Layout = ?";
+    $params[] = $layout;
+    $types .= 's';
+}
+if (!empty($brandFilter)) {
+    $where[] = "p.Brand = ?";
+    $params[] = $brandFilter;
+    $types .= 's';
+}
+if (!empty($search)) {
+    $where[] = "(LOWER(p.Brand) LIKE ? OR LOWER(p.Model) LIKE ? OR LOWER(p.Description) LIKE ? OR LOWER(CONCAT(p.Brand, ' ', p.Model)) LIKE ?)";
+    $like = '%' . strtolower($search) . '%';
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $params[] = $like;
+    $types .= 'ssss';
+}
+
+if (!empty($where)) {
+    $sql .= ' WHERE ' . implode(' AND ', $where);
 }
 
 $sql .= " GROUP BY p.ProductID
           ORDER BY p.TotalSold DESC, p.ProductID DESC";
 
-if (!empty($category)) {
+if (!empty($where)) {
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $category);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    if ($stmt) {
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        $result = $conn->query($sql);
+    }
 } else {
     $result = $conn->query($sql);
 }
@@ -57,9 +103,10 @@ if ($result && $result->num_rows > 0) {
             $priceDisplay = 'Price not available';
         }
 
+        $brandPart = isset($row['Brand']) && trim($row['Brand']) !== '' && strtoupper(trim($row['Brand'])) !== 'N/A' ? trim($row['Brand']) . ' ' : '';
         $products[] = [
             'id' => $row['ProductID'],
-            'name' => $row['Brand'] . ' ' . $row['Model'],
+            'name' => $brandPart . $row['Model'],
             'description' => $row['Description'],
             'category' => $row['Category'],
             'price' => $priceDisplay,
@@ -83,17 +130,29 @@ if (!empty($category)) {
         $categoryTitle = 'Accessories';
     }
 }
+
+$displayTitle = $categoryTitle;
+if (!empty($brandFilter)) {
+    $displayTitle .= ' — ' . htmlspecialchars($brandFilter);
+}
+if (!empty($layout)) {
+    $displayTitle .= ' — ' . htmlspecialchars($layout) . '%';
+}
+if (!empty($search)) {
+    $displayTitle = 'Results for "' . htmlspecialchars($search) . '"';
+}
 ?>
 
 <section class="section">
     <h2 class="section-title">
-        <?php echo htmlspecialchars($categoryTitle); ?>
+        <?php echo htmlspecialchars($displayTitle); ?>
     </h2>
 
     <?php if (!$isLoggedIn): ?>
         <div class="login-prompt">
             <p><i class="fas fa-lock"></i> <strong>Sign in to add items to cart and checkout</strong></p>
-            <button type="button" class="btn-primary" style="display: inline-block;" onclick="if(typeof showAuthModal==='function'){ showAuthModal('login'); } else { window.location.href='../login.php'; }">
+            <button type="button" class="btn-primary" style="display: inline-block;"
+                onclick="if(typeof showAuthModal==='function'){ showAuthModal('login'); } else { window.location.href='../login.php'; }">
                 <i class="fas fa-sign-in-alt"></i> Login Now
             </button>
         </div>

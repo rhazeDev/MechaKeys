@@ -12,13 +12,17 @@ $collections = [
     <h2 class="section-title">
         Keyboard Collections
     </h2>
-    <div class="collection-grid">
+    <div class="collection-row" role="list">
         <?php foreach ($collections as $collection): ?>
-            <div class="collection-card">
+            <?php
+            $layoutParam = preg_replace('/[^0-9]/', '', $collection['icon']);
+            ?>
+            <a href="index.php?category=keyboard&layout=<?php echo urlencode($layoutParam); ?>" class="collection-card"
+                role="listitem">
                 <div class="collection-icon"><?php echo $collection['icon']; ?></div>
                 <h3><?php echo $collection['name']; ?></h3>
                 <p><?php echo $collection['desc']; ?></p>
-            </div>
+            </a>
         <?php endforeach; ?>
     </div>
 </section>

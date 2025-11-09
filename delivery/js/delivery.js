@@ -266,13 +266,20 @@ function openStatusModal(event, orderId, trackingId, currentStatus) {
     options.forEach(option => {
         const optionStatus = option.dataset.status;
         option.classList.remove('disabled');
+        option.style.opacity = '1';
+        option.style.pointerEvents = 'auto';
+        option.style.cursor = 'pointer';
+
+        if (currentStatus === 'In Transit' && optionStatus === 'Picked') {
+            option.style.opacity = '0.5';
+            option.style.pointerEvents = 'none';
+            option.style.cursor = 'not-allowed';
+        }
 
         if (currentStatus === 'Delivered') {
-            option.classList.add('disabled');
-        } else if (currentStatus === 'In Transit' && optionStatus === 'Picked') {
-            option.classList.add('disabled');
-        } else if (currentStatus === 'Picked' && (optionStatus === 'Picked' || optionStatus === 'In Transit')) {
-            option.classList.add('disabled');
+            option.style.opacity = '0.5';
+            option.style.pointerEvents = 'none';
+            option.style.cursor = 'not-allowed';
         }
     });
 }
@@ -284,9 +291,9 @@ async function updateDeliveryStatus(newStatus) {
     }
 
     if (newStatus === 'Delivered') {
-        if (!confirm('Are you sure you want to mark this order as Delivered? This action confirms that the customer has received the order.')) {
-            return;
-        }
+        closeModal('statusModal');
+        openProofOfDeliveryModal();
+        return;
     }
 
     try {
@@ -362,7 +369,7 @@ function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
-        if (modalId === 'statusModal') {
+        if (modalId === 'proofOfDeliveryModal') {
             currentOrderId = null;
             currentTrackingId = null;
         }
@@ -874,3 +881,241 @@ window.addEventListener('beforeunload', () => {
         navigator.geolocation.clearWatch(locationWatchId);
     }
 });
+
+let videoStream = null;
+let capturedImageBlob = null;
+
+function openProofOfDeliveryModal() {
+    const modal = document.getElementById('proofOfDeliveryModal');
+    if (modal) {
+        resetProofOfDeliveryModal();
+        modal.classList.add('active');
+        initializeCamera();
+    }
+}
+
+function resetProofOfDeliveryModal() {
+    document.getElementById('videoStream').style.display = 'none';
+    document.getElementById('captureCanvas').style.display = 'none';
+    document.getElementById('noCameraMessage').style.display = 'none';
+    document.getElementById('capturedImagePreview').style.display = 'none';
+    document.getElementById('captureBtnCamera').style.display = 'none';
+    document.getElementById('retakeBtnCamera').style.display = 'none';
+
+    capturedImageBlob = null;
+}
+
+async function initializeCamera() {
+    try {
+        const hasCamera = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+
+        if (!hasCamera) {
+            document.getElementById('noCameraMessage').style.display = 'block';
+            document.getElementById('captureBtnCamera').style.display = 'none';
+            return;
+        }
+
+        videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false
+        });
+
+        const video = document.getElementById('videoStream');
+        video.srcObject = videoStream;
+        video.style.display = 'block';
+
+        video.play();
+
+        document.getElementById('noCameraMessage').style.display = 'none';
+        document.getElementById('captureBtnCamera').style.display = 'inline-block';
+
+        document.getElementById('captureBtnCamera').onclick = capturePhoto;
+        document.getElementById('retakeBtnCamera').onclick = retakePhoto;
+
+    } catch (error) {
+        console.error('Camera error:', error);
+        document.getElementById('noCameraMessage').style.display = 'block';
+        document.getElementById('captureBtnCamera').style.display = 'none';
+
+        if (error.name === 'NotAllowedError') {
+            showError('Camera permission denied. Cannot proceed without camera.');
+        } else if (error.name === 'NotFoundError') {
+            showError('No camera found on this device.');
+        } else {
+            showError('Unable to access camera.');
+        }
+    }
+}
+
+function startCamera() {
+    const video = document.getElementById('videoStream');
+    if (videoStream) {
+        video.play();
+    }
+}
+
+function capturePhoto() {
+    const video = document.getElementById('videoStream');
+    const canvas = document.getElementById('captureCanvas');
+    const ctx = canvas.getContext('2d');
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+        showError('Camera stream not ready. Please wait a moment.');
+        console.error('Video dimensions not ready:', video.videoWidth, video.videoHeight);
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+
+    ctx.drawImage(video, 0, 0);
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                console.log('Location obtained:', lat, lng);
+                drawLocationOnCanvas(canvas, lat, lng, () => {
+                    saveCanvasAsBlob(canvas);
+                });
+            },
+            (error) => {
+                console.warn('Location error, proceeding without location:', error);
+                saveCanvasAsBlob(canvas);
+            }
+        );
+    } else {
+        saveCanvasAsBlob(canvas);
+    }
+}
+
+function drawLocationOnCanvas(canvas, latitude, longitude, callback) {
+    const ctx = canvas.getContext('2d');
+    const timestamp = new Date().toLocaleString();
+    const locationText = `📍 ${latitude.toFixed(6)}, ${longitude.toFixed(6)} • ${timestamp}`;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(locationText, 15, canvas.height - 20);
+
+    if (callback) callback();
+}
+
+function saveCanvasAsBlob(canvas) {
+    canvas.toBlob(blob => {
+        if (!blob) {
+            showError('Failed to create image from canvas');
+            console.error('Canvas toBlob returned null');
+            return;
+        }
+
+        console.log('Blob created:', {
+            size: blob.size,
+            type: blob.type
+        });
+
+        capturedImageBlob = blob;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('capturedImage').src = e.target.result;
+            document.getElementById('capturedImagePreview').style.display = 'block';
+            document.getElementById('videoStream').style.display = 'none';
+            document.getElementById('captureBtnCamera').style.display = 'none';
+            document.getElementById('retakeBtnCamera').style.display = 'inline-block';
+            showSuccess('Photo captured with location! You can retake or submit.');
+        };
+        reader.onerror = (error) => {
+            console.error('FileReader error:', error);
+            showError('Failed to preview image');
+        };
+        reader.readAsDataURL(blob);
+    }, 'image/jpeg', 0.95);
+}
+
+function retakePhoto() {
+    const video = document.getElementById('videoStream');
+    video.style.display = 'block';
+    video.play(); document.getElementById('capturedImagePreview').style.display = 'none';
+    document.getElementById('captureBtnCamera').style.display = 'inline-block';
+    document.getElementById('retakeBtnCamera').style.display = 'none';
+    capturedImageBlob = null;
+}
+
+function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null;
+    }
+    document.getElementById('videoStream').style.display = 'none';
+    document.getElementById('captureBtnCamera').style.display = 'none';
+    document.getElementById('retakeBtnCamera').style.display = 'none';
+}
+
+async function submitProofOfDelivery() {
+    if (!capturedImageBlob) {
+        showError('Please capture a photo first');
+        console.error('No image blob captured');
+        return;
+    }
+
+    if (!currentOrderId || !currentTrackingId) {
+        showError('Invalid order or tracking information');
+        console.error('Missing order or tracking ID');
+        return;
+    }
+
+    try {
+        stopCamera();
+
+        const submitBtn = document.getElementById('submitProofBtn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+        const formData = new FormData();
+        formData.append('order_id', currentOrderId);
+        formData.append('tracking_id', currentTrackingId);
+        formData.append('status', 'Delivered');
+        formData.append('proof_image', capturedImageBlob, 'proof_of_delivery.jpg');
+
+        console.log('Submitting proof with:', {
+            order_id: currentOrderId,
+            tracking_id: currentTrackingId,
+            image_size: capturedImageBlob.size,
+            image_type: capturedImageBlob.type
+        });
+
+        const response = await fetch('api/update_delivery_status.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        console.log('API Response:', result);
+
+        if (result.success) {
+            capturedImageBlob = null;
+            closeModal('proofOfDeliveryModal');
+            showSuccess('Order marked as delivered with proof!');
+            loadDeliveries();
+        } else {
+            showError(result.message || 'Failed to submit proof of delivery');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Error submitting proof:', error);
+        showError('An error occurred: ' + error.message);
+        document.getElementById('submitProofBtn').disabled = false;
+        document.getElementById('submitProofBtn').innerHTML = '<i class="fas fa-check"></i> Submit Proof';
+    }
+}

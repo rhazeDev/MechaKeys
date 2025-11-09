@@ -1113,6 +1113,26 @@ body {
     max-width: 900px;
 }
 
+/* Alternative modal class used for specific admin modals to avoid conflicts
+   (keeps same behavior as .modal but scoped separately) */
+.modal-alt {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-alt.active {
+    display: flex;
+}
+
 .order-details-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
