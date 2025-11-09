@@ -60,6 +60,11 @@ $total_revenue = $conn->query("SELECT SUM(TotalAmount) as total FROM orders o JO
 
     <script src="../js/alert.js"></script>
     <script src="components/scripts.js"></script>
+    <script src="components/scripts.dashboard.js"></script>
+    <script src="components/scripts.products.js"></script>
+    <script src="components/scripts.inventory.js"></script>
+    <script src="components/scripts.orders.js"></script>
+    <script src="components/scripts.riders.js"></script>
 </body>
 
 </html>
