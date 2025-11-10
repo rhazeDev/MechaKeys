@@ -25,6 +25,7 @@ $rider_query->close();
     <title>Delivery Dashboard - MechaKeys</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../css/delivery.css">
+    <link rel="stylesheet" href="../css/alert.css">
     <!-- Mapbox CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 </head>
@@ -144,17 +145,17 @@ $rider_query->close();
             </div>
             <div class="modal-body">
                 <div class="status-options">
-                    <div class="status-option" data-status="Picked" onclick="updateDeliveryStatus('Picked')">
+                    <div class="status-option" data-status="Picked">
                         <i class="fas fa-box"></i>
                         <span>Order Picked</span>
                         <p class="status-desc">I've picked up the order</p>
                     </div>
-                    <div class="status-option" data-status="In Transit" onclick="updateDeliveryStatus('In Transit')">
+                    <div class="status-option" data-status="In Transit">
                         <i class="fas fa-truck"></i>
                         <span>On the Way</span>
                         <p class="status-desc">I'm heading to delivery</p>
                     </div>
-                    <div class="status-option" data-status="Delivered" onclick="updateDeliveryStatus('Delivered')">
+                    <div class="status-option" data-status="Delivered">
                         <i class="fas fa-check-circle"></i>
                         <span>Delivered</span>
                         <p class="status-desc">Order delivered successfully</p>

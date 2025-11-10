@@ -3,7 +3,9 @@ async function loadInventory() {
     container.innerHTML = '<div class="text-center">Loading...</div>';
 
     try {
-        const response = await fetch('api/get_inventory.php');
+        const response = await fetch('api/get_inventory.php', {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -78,7 +80,8 @@ async function updateStock() {
             body: JSON.stringify({
                 variation_id: variationId,
                 stock: newStock
-            })
+            }),
+            credentials: 'same-origin'
         });
 
         const result = await response.json();

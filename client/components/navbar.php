@@ -2,6 +2,7 @@
 $isLoggedIn = isset($_SESSION['user_id']);
 
 $cartCount = 0;
+$userCoins = 0;
 if ($isLoggedIn) {
     require_once __DIR__ . '/../../conn.php';
     $customer_id = $_SESSION['user_id'];
@@ -12,6 +13,14 @@ if ($isLoggedIn) {
     $row = $result->fetch_assoc();
     $cartCount = $row['count'];
     $stmt->close();
+
+    $coins_stmt = $conn->prepare("SELECT Coins FROM users WHERE ID = ?");
+    $coins_stmt->bind_param("i", $customer_id);
+    $coins_stmt->execute();
+    $coins_result = $coins_stmt->get_result();
+    $coins_row = $coins_result->fetch_assoc();
+    $userCoins = $coins_row['Coins'] ?? 0;
+    $coins_stmt->close();
 }
 ?>
 <nav class="navbar">
@@ -55,6 +64,12 @@ if ($isLoggedIn) {
                                 <span
                                     class="user-email"><?php echo isset($_SESSION['email']) ? $_SESSION['email'] : 'user@example.com'; ?></span>
                             </div>
+                            <?php if ($userCoins > 0): ?>
+                                <div class="dropdown-coins" title="Available coins for discounts">
+                                    <i class="fas fa-coins"></i>
+                                    <span class="coins-value">₱<?php echo number_format($userCoins, 2); ?></span>
+                                </div>
+                            <?php endif; ?>
                             <div class="dropdown-divider"></div>
                             <a href="profile.php" class="dropdown-item">
                                 <i class="fas fa-user"></i> Profile

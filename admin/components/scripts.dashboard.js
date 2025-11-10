@@ -1,6 +1,8 @@
 async function loadDashboard() {
     try {
-        const response = await fetch('api/get_dashboard.php');
+        const response = await fetch('api/get_dashboard.php', {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {

@@ -5,7 +5,9 @@ async function loadProducts() {
     container.innerHTML = '<div class="text-center">Loading...</div>';
 
     try {
-        const response = await fetch('api/get_products.php');
+        const response = await fetch('api/get_products.php', {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -75,7 +77,8 @@ async function deleteProduct(productId) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ product_id: productId })
+                    body: JSON.stringify({ product_id: productId }),
+                    credentials: 'same-origin'
                 });
 
                 const result = await response.json();
@@ -99,7 +102,9 @@ async function deleteProduct(productId) {
 
 async function editProduct(productId) {
     try {
-        const response = await fetch(`api/get_product.php?id=${productId}`);
+        const response = await fetch(`api/get_product.php?id=${productId}`, {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -213,7 +218,8 @@ async function saveProductEdit() {
     try {
         const response = await fetch('api/update_product.php', {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'same-origin'
         });
 
         const result = await response.json();

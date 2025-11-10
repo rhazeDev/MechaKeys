@@ -97,20 +97,28 @@ function renderDeliveries(deliveries) {
         const hasLocation = delivery.CustomerLocation && delivery.CustomerLocation.trim() !== '';
         const isDelivered = delivery.DeliveryStatus === 'Delivered';
         const isInTransit = delivery.DeliveryStatus === 'In Transit';
+        const isReturn = delivery.IsReturn === true;
 
         const showButtons = !isDelivered;
         const showLocationBtn = hasLocation && isInTransit && !isDelivered;
 
+        const trackingId = isReturn ? delivery.ReturnTrackingID : delivery.TrackingID;
+        const orderId = delivery.OrderID;
+
         return `
-            <div class="delivery-card" onclick="openOrderModal(${delivery.OrderID})">
+            <div class="delivery-card ${isReturn ? 'return-card' : ''}" onclick="openOrderModal(${orderId})">
                 <div class="delivery-header">
                     <div class="delivery-order-info">
-                        <h3 class="order-number">#${String(delivery.OrderID).padStart(6, '0')}</h3>
+                        <span class="type-label ${isReturn ? 'return-label' : 'order-label'}">
+                            <i class="fas ${isReturn ? 'fa-undo' : 'fa-shopping-cart'}"></i>
+                            ${isReturn ? 'RETURN' : 'ORDER'}
+                        </span>
+                        <h3 class="order-number">#${String(orderId).padStart(6, '0')}</h3>
                         <p class="customer-name">${delivery.CustomerName}</p>
                     </div>
                     <span class="status-badge ${statusClass}">
                         <i class="${statusIcon}"></i>
-                        ${delivery.DeliveryStatus}
+                        ${getStatusDisplayText(delivery.DeliveryStatus)}
                     </span>
                 </div>
 
@@ -124,9 +132,15 @@ function renderDeliveries(deliveries) {
                         <span>${delivery.CustomerPhone}</span>
                     </div>
                     <div class="info-row">
-                        <i class="fas fa-box"></i>
-                        <span>${delivery.ItemCount} item(s) - ₱${parseFloat(delivery.TotalAmount).toFixed(2)}</span>
+                        <i class="fas ${isReturn ? 'fa-reply' : 'fa-box'}"></i>
+                        <span>${delivery.ItemCount} item(s) - ₱${parseFloat(delivery.FinalAmount).toFixed(2)}</span>
                     </div>
+                    ${isReturn ? `
+                        <div class="info-row">
+                            <i class="fas fa-comment-dots"></i>
+                            <span class="return-reason" style="font-style: italic; color: #64748b;">${delivery.ReturnReason}</span>
+                        </div>
+                    ` : ''}
                 </div>
 
                 ${showButtons ? `
@@ -136,7 +150,7 @@ function renderDeliveries(deliveries) {
                                 <i class="fas fa-map-marked-alt"></i> View Location
                             </button>
                         ` : ''}
-                        <button class="btn btn-primary btn-sm" onclick="openStatusModal(event, ${delivery.OrderID}, ${delivery.TrackingID}, '${delivery.DeliveryStatus}')">
+                        <button class="btn btn-primary btn-sm" onclick="openStatusModal(event, ${orderId}, ${trackingId}, '${delivery.DeliveryStatus}', ${isReturn})">
                             <i class="fas fa-edit"></i> Update Status
                         </button>
                     </div>
@@ -164,6 +178,16 @@ function getStatusIcon(status) {
         'Delivered': 'fas fa-check-circle'
     };
     return iconMap[status] || 'fas fa-info-circle';
+}
+
+function getStatusDisplayText(status) {
+    const displayMap = {
+        'Assigned': 'Assigned',
+        'Picked': 'Item Picked',
+        'In Transit': 'On the Way',
+        'Delivered': 'Delivered'
+    };
+    return displayMap[status] || status;
 }
 
 async function openOrderModal(orderId) {
@@ -236,7 +260,7 @@ async function openOrderModal(orderId) {
                         </div>
                         <div class="detail-row">
                             <span class="label">Total Amount:</span>
-                            <span class="value total">₱${parseFloat(order.TotalAmount).toFixed(2)}</span>
+                            <span class="value total">₱${parseFloat(order.TotalAmount - order.Discount).toFixed(2)}</span>
                         </div>
                         <div class="detail-row">
                             <span class="label">Current Status:</span>
@@ -254,13 +278,20 @@ async function openOrderModal(orderId) {
     }
 }
 
-function openStatusModal(event, orderId, trackingId, currentStatus) {
+function openStatusModal(event, orderId, trackingId, currentStatus, isReturn) {
     event.stopPropagation();
     currentOrderId = orderId;
     currentTrackingId = trackingId;
 
     const modal = document.getElementById('statusModal');
+    const modalHeader = modal.querySelector('.modal-header h2');
     modal.classList.add('active');
+
+    if (isReturn) {
+        if (modalHeader) modalHeader.textContent = 'Update Return Status';
+    } else {
+        if (modalHeader) modalHeader.textContent = 'Update Delivery Status';
+    }
 
     const options = document.querySelectorAll('.status-option');
     options.forEach(option => {
@@ -269,6 +300,26 @@ function openStatusModal(event, orderId, trackingId, currentStatus) {
         option.style.opacity = '1';
         option.style.pointerEvents = 'auto';
         option.style.cursor = 'pointer';
+
+        option.onclick = () => updateDeliveryStatus(optionStatus, isReturn);
+
+        if (isReturn && optionStatus === 'Picked') {
+            option.style.display = 'none';
+        } else {
+            option.style.display = 'block';
+        }
+
+        if (isReturn && optionStatus === 'Delivered') {
+            const span = option.querySelector('span');
+            const desc = option.querySelector('.status-desc');
+            if (span) span.textContent = 'Item Picked';
+            if (desc) desc.textContent = 'I\'ve picked up the return item';
+        } else if (!isReturn && optionStatus === 'Delivered') {
+            const span = option.querySelector('span');
+            const desc = option.querySelector('.status-desc');
+            if (span) span.textContent = 'Delivered';
+            if (desc) desc.textContent = 'Order delivered successfully';
+        }
 
         if (currentStatus === 'In Transit' && optionStatus === 'Picked') {
             option.style.opacity = '0.5';
@@ -284,13 +335,15 @@ function openStatusModal(event, orderId, trackingId, currentStatus) {
     });
 }
 
-async function updateDeliveryStatus(newStatus) {
+async function updateDeliveryStatus(newStatus, isReturn = false) {
     if (!currentOrderId || !currentTrackingId) {
         showError('Invalid order or tracking information');
         return;
     }
 
-    if (newStatus === 'Delivered') {
+    const shouldCaptureProof = newStatus === 'Delivered';
+
+    if (shouldCaptureProof) {
         closeModal('statusModal');
         openProofOfDeliveryModal();
         return;
@@ -732,7 +785,6 @@ function setManualLocation() {
 
     closeModal('setLocationModal');
 
-    showSuccess('Location set successfully! Customers can now track your position.');
 }
 
 function showLocationBanner() {
@@ -1030,7 +1082,6 @@ function saveCanvasAsBlob(canvas) {
             document.getElementById('videoStream').style.display = 'none';
             document.getElementById('captureBtnCamera').style.display = 'none';
             document.getElementById('retakeBtnCamera').style.display = 'inline-block';
-            showSuccess('Photo captured with location! You can retake or submit.');
         };
         reader.onerror = (error) => {
             console.error('FileReader error:', error);
@@ -1105,7 +1156,7 @@ async function submitProofOfDelivery() {
         if (result.success) {
             capturedImageBlob = null;
             closeModal('proofOfDeliveryModal');
-            showSuccess('Order marked as delivered with proof!');
+            showSuccess('Order marked as delivered!');
             loadDeliveries();
         } else {
             showError(result.message || 'Failed to submit proof of delivery');

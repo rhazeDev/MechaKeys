@@ -19,6 +19,7 @@ $customer_id = $_SESSION['user_id'];
 $order_sql = "SELECT 
                 o.OrderID,
                 o.TotalAmount,
+                o.Discount,
                 o.PlaceOrdered,
                 o.TrackingID,
                 t.DeliveryStatus,
@@ -152,9 +153,32 @@ $items_stmt->close();
                         <?php endforeach; ?>
                     </div>
 
-                    <div class="order-total">
-                        <span>Total Amount</span>
-                        <span class="total-value">₱<?php echo number_format($order['TotalAmount'], 2); ?></span>
+                    <div class="order-total interactive-summary expanded" onclick="toggleOrderSummary()">
+                        <div class="summary-header">
+                            <h3 class="summary-title">
+                                <i class="fas fa-receipt"></i>
+                                Order Summary
+                            </h3>
+                            <div class="summary-toggle">
+                                <i class="fas fa-chevron-up"></i>
+                            </div>
+                        </div>
+                        <div class="total-breakdown">
+                            <div class="summary-row">
+                                <span class="summary-label subtotal-label">Subtotal</span>
+                                <span class="summary-price">₱<?php echo number_format($order['TotalAmount'], 2); ?></span>
+                            </div>
+                            <?php if ($order['Discount'] > 0): ?>
+                            <div class="summary-row">
+                                <span class="summary-label discount-label">Coin Discount</span>
+                                <span class="summary-price discount-price">-₱<?php echo number_format($order['Discount'], 2); ?></span>
+                            </div>
+                            <?php endif; ?>
+                            <div class="summary-row total-row">
+                                <span class="summary-label total-label">Total Amount</span>
+                                <span class="summary-price total-price">₱<?php echo number_format($order['TotalAmount'] - $order['Discount'], 2); ?></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -234,6 +258,22 @@ $items_stmt->close();
                 document.querySelector('.checkmark-circle').classList.add('animate');
             }, 200);
         });
+
+        function toggleOrderSummary() {
+            const summary = document.querySelector('.interactive-summary');
+            const breakdown = summary.querySelector('.total-breakdown');
+            const toggleIcon = summary.querySelector('.summary-toggle i');
+
+            if (summary.classList.contains('expanded')) {
+                breakdown.style.display = 'none';
+                toggleIcon.className = 'fas fa-chevron-down';
+                summary.classList.remove('expanded');
+            } else {
+                breakdown.style.display = 'block';
+                toggleIcon.className = 'fas fa-chevron-up';
+                summary.classList.add('expanded');
+            }
+        }
     </script>
 </body>
 

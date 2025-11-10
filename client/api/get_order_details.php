@@ -20,6 +20,7 @@ if ($order_id <= 0) {
 $order_sql = "SELECT 
                 o.OrderID,
                 o.TotalAmount,
+                o.Discount,
                 o.PlaceOrdered,
                 o.TrackingID,
                     t.DeliveryStatus,
@@ -105,6 +106,7 @@ echo json_encode([
     'order' => [
         'order_id' => $order['OrderID'],
         'total_amount' => $order['TotalAmount'],
+        'discount' => $order['Discount'],
         'placed_date' => $order['PlaceOrdered'],
         'delivery_status' => $order['DeliveryStatus'],
         'payment_status' => $order['PaymentStatus'],

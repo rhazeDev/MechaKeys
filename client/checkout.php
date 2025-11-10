@@ -25,6 +25,15 @@ if ($profile_incomplete) {
     exit;
 }
 
+$coins_sql = "SELECT Coins FROM users WHERE ID = ?";
+$coins_stmt = $conn->prepare($coins_sql);
+$coins_stmt->bind_param("i", $customer_id);
+$coins_stmt->execute();
+$coins_result = $coins_stmt->get_result();
+$coins_data = $coins_result->fetch_assoc();
+$customer_coins = $coins_data['Coins'] ?? 0;
+$coins_stmt->close();
+
 $cart_sql = "SELECT 
                 c.CartID,
                 c.ProductID,
@@ -102,7 +111,9 @@ if ($has_stock_issues) {
     exit;
 }
 
-$shipping_fee = 0; $total = $subtotal + $shipping_fee;
+$shipping_fee = 0;
+$coins_discount = 0;
+$total = $subtotal + $shipping_fee;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -290,12 +301,32 @@ $shipping_fee = 0; $total = $subtotal + $shipping_fee;
                                 <?php echo $shipping_fee > 0 ? '₱' . number_format($shipping_fee, 2) : 'FREE'; ?>
                             </span>
                         </div>
+
+                        <?php if ($customer_coins > 0): ?>
+                        <div class="summary-row">
+                            <span>Available Coins</span>
+                            <span class="coins-available">₱<?php echo number_format($customer_coins, 2); ?></span>
+                        </div>
+
+                        <div class="coins-discount-section">
+                            <label for="use_coins" class="coins-checkbox-label">
+                                <input type="checkbox" id="use_coins" name="use_coins">
+                                <span>Use coins as discount</span>
+                            </label>
+                            <div id="coins-input-wrapper" style="display: none; margin-top: 0.5rem;">
+                                <input type="number" id="coins_amount" class="coins-input" 
+                                       placeholder="Amount to use" min="0" max="<?php echo $customer_coins; ?>"
+                                       value="0">
+                                <small class="text-muted">Max: ₱<?php echo number_format($customer_coins, 2); ?></small>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         
                         <div class="summary-divider"></div>
                         
                         <div class="summary-total">
                             <span>Total Amount</span>
-                            <span>₱<?php echo number_format($total, 2); ?></span>
+                            <span id="final-total">₱<?php echo number_format($subtotal + $shipping_fee, 2); ?></span>
                         </div>
 
                         <button 
@@ -339,6 +370,50 @@ $shipping_fee = 0; $total = $subtotal + $shipping_fee;
                     e.stopPropagation();
                 });
             }
+
+            const useCoinsCheckbox = document.getElementById('use_coins');
+            if (useCoinsCheckbox) {
+                const coinsInputWrapper = document.getElementById('coins-input-wrapper');
+                const coinsAmountInput = document.getElementById('coins_amount');
+                const subtotal = <?php echo $subtotal + $shipping_fee; ?>;
+                const maxCoins = <?php echo $customer_coins ?? 0; ?>;
+
+                useCoinsCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        coinsInputWrapper.style.display = 'block';
+                        coinsAmountInput.focus();
+                    } else {
+                        coinsInputWrapper.style.display = 'none';
+                        coinsAmountInput.value = 0;
+                        updateTotal();
+                    }
+                });
+
+                coinsAmountInput.addEventListener('input', function() {
+                    let amount = parseFloat(this.value) || 0;
+                    if (amount > maxCoins) {
+                        amount = maxCoins;
+                        this.value = maxCoins;
+                    }
+                    if (amount > subtotal) {
+                        amount = subtotal;
+                        this.value = subtotal;
+                    }
+                    if (amount < 0) {
+                        amount = 0;
+                        this.value = 0;
+                    }
+                    updateTotal();
+                });
+            }
+
+            function updateTotal() {
+                const useCoins = document.getElementById('use_coins')?.checked || false;
+                const coinsAmount = useCoins ? (parseFloat(document.getElementById('coins_amount')?.value) || 0) : 0;
+                const subtotal = <?php echo $subtotal + $shipping_fee; ?>;
+                const finalTotal = Math.max(0, subtotal - coinsAmount);
+                document.getElementById('final-total').textContent = '₱' + finalTotal.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
         });
 
         function placeOrder() {
@@ -353,10 +428,13 @@ $shipping_fee = 0; $total = $subtotal + $shipping_fee;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
                         const orderNotes = document.getElementById('order_notes').value.trim();
+            const useCoins = document.getElementById('use_coins')?.checked || false;
+            const coinsAmount = useCoins ? (parseFloat(document.getElementById('coins_amount')?.value) || 0) : 0;
 
                         const formData = new FormData();
             formData.append('payment_method', 'cod');
             formData.append('order_notes', orderNotes);
+            formData.append('coins_used', coinsAmount);
 
                         fetch('api/process_order.php', {
                 method: 'POST',

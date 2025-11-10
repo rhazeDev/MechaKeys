@@ -11,7 +11,9 @@ async function loadDeliveryRiders(attempt = 0) {
     }
 
     try {
-        const response = await fetch('api/get_riders.php');
+        const response = await fetch('api/get_riders.php', {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -92,7 +94,8 @@ async function submitAddRider(event) {
     try {
         const response = await fetch('api/add_rider.php', {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'same-origin'
         });
 
         const result = await response.json();
@@ -114,7 +117,9 @@ async function openEditRiderModal(riderId) {
     const modal = document.getElementById('editRiderModal');
 
     try {
-        const response = await fetch('api/get_riders.php');
+        const response = await fetch('api/get_riders.php', {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -154,7 +159,8 @@ async function submitEditRider(event) {
     try {
         const response = await fetch('api/update_rider.php', {
             method: 'POST',
-            body: formData
+            body: formData,
+            credentials: 'same-origin'
         });
 
         const result = await response.json();
@@ -182,7 +188,8 @@ async function deleteRider(riderId, riderName) {
 
                 const response = await fetch('api/delete_rider.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin'
                 });
 
                 const result = await response.json();
@@ -259,7 +266,9 @@ async function loadRiderStats(riderId) {
     try {
         const url = `api/get_rider_stats.php?rider_id=${riderId}&filter=${filter}`;
         console.log('[RiderStats] fetching', url);
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            credentials: 'same-origin'
+        });
 
         const raw = await response.text();
         let result;

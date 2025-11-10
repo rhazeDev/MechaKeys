@@ -188,21 +188,137 @@
 }
 
 .order-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 20px 16px;
     background: var(--background);
     border-radius: 10px;
+    border: 2px solid var(--primary);
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 24px;
+}
+
+.order-total:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.interactive-summary {
+    position: relative;
+}
+
+.summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.summary-title {
     font-size: 18px;
     font-weight: 700;
     color: var(--text-light);
-    border: 2px solid var(--primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.total-value {
-    font-size: 24px;
+.summary-title i {
     color: var(--primary);
+}
+
+.summary-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(30, 30, 30, 0.1);
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.interactive-summary:hover .summary-toggle {
+    background: var(--primary);
+    color: white;
+}
+
+.total-breakdown {
+    display: block;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(224, 224, 224, 0.3);
+}
+
+.summary-row:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.summary-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-align: right;
+    flex: 0 0 auto;
+    min-width: 80px;
+}
+
+.subtotal-label,
+.discount-label {
+    color: #9ca3af;
+}
+
+.discount-price {
+    color: #dc2626;
+}
+
+.total-row {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 2px solid var(--primary);
+}
+
+.total-label {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+.total-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Collapsed state */
+.interactive-summary:not(.expanded) .total-breakdown {
+    display: none;
+}
+
+.interactive-summary:not(.expanded) .summary-header {
+    margin-bottom: 0;
+}
+
+/* Animation for toggle */
+.summary-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.interactive-summary.expanded .summary-toggle i {
+    transform: rotate(180deg);
 }
 
 /* Details Sidebar */
@@ -398,13 +514,19 @@
         font-size: 16px;
     }
 
-    .action-buttons {
+    .summary-row {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
     }
 
-    .btn {
-        width: 100%;
-        justify-content: center;
+    .summary-price {
+        align-self: flex-end;
+        font-size: 16px;
+    }
+
+    .total-price {
+        font-size: 20px;
     }
 }
 

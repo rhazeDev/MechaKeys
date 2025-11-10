@@ -21,6 +21,7 @@ $orders_query = "SELECT
                     o.CustomerID,
                     o.TrackingID,
                     o.TotalAmount,
+                    o.Discount,
                     o.PlaceOrdered,
                     u.FullName as CustomerName,
                     u.Email as CustomerEmail,
@@ -32,13 +33,16 @@ $orders_query = "SELECT
                     p.Status as PaymentStatus,
                     p.PaymentID,
                     COUNT(oi.OrderItemID) as ItemCount,
-                    delivery_person.FullName as DeliveryPersonName
+                    delivery_person.FullName as DeliveryPersonName,
+                    r.ReturnID,
+                    r.Status as ReturnStatus
                 FROM orders o
                 INNER JOIN users u ON o.CustomerID = u.ID
                 INNER JOIN trackings t ON o.TrackingID = t.TrackingID
                 INNER JOIN payments p ON o.PaymentID = p.PaymentID
                 LEFT JOIN orderitems oi ON o.OrderID = oi.OrderID
                 LEFT JOIN users delivery_person ON t.DeliveryPersonID = delivery_person.ID
+                LEFT JOIN returns r ON o.OrderID = r.OrderID
                 $where_clause
                 GROUP BY o.OrderID
                 ORDER BY o.PlaceOrdered DESC";

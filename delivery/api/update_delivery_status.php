@@ -1,6 +1,6 @@
 <?php
 session_start();
-include '../../conn.php';
+require_once '../../conn.php';
 
 header('Content-Type: application/json');
 
@@ -36,68 +36,83 @@ if (!isset($status_mapping[$new_status])) {
 
 $mapped_status = $status_mapping[$new_status];
 
+$check_return_for_proof = $conn->prepare("SELECT ReturnID FROM returns WHERE ReturnTrackingID = ?");
+$check_return_for_proof->bind_param("i", $tracking_id);
+$check_return_for_proof->execute();
+$is_return_for_proof = $check_return_for_proof->get_result()->num_rows > 0;
+$check_return_for_proof->close();
+
+if ($is_return_for_proof && $new_status === 'Picked') {
+    $mapped_status = 'Delivered';
+}
+
 $proof_image_path = null;
-if ($new_status === 'Delivered' && isset($_FILES['proof_image'])) {
-    $file = $_FILES['proof_image'];
+$upload_dir = null;
+$filename = null;
 
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        echo json_encode(['success' => false, 'message' => 'Upload error: ' . $file['error']]);
-        exit;
-    }
+if ($new_status === 'Delivered') {
+    if (isset($_FILES['proof_image'])) {
+        $file = $_FILES['proof_image'];
 
-    if ($file['size'] == 0) {
-        echo json_encode(['success' => false, 'message' => 'Empty file uploaded']);
-        exit;
-    }
-
-    $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-    $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    $file_type = $file['type'];
-
-    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!in_array($file_type, $allowed_types) && !in_array($file_extension, $allowed_extensions)) {
-        echo json_encode(['success' => false, 'message' => 'Invalid image type. Allowed: JPG, PNG, GIF, WebP']);
-        exit;
-    }
-
-    if ($file['size'] > 5 * 1024 * 1024) {
-        echo json_encode(['success' => false, 'message' => 'File size too large (max 5MB)']);
-        exit;
-    }
-
-    $upload_dir = '../../proofofdelivery';
-    if (!is_dir($upload_dir)) {
-        if (!@mkdir($upload_dir, 0755, true)) {
-            echo json_encode(['success' => false, 'message' => 'Failed to create upload directory']);
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            echo json_encode(['success' => false, 'message' => 'Upload error: ' . $file['error']]);
             exit;
         }
-    }
 
-    if (!is_writable($upload_dir)) {
-        echo json_encode(['success' => false, 'message' => 'Upload directory not writable']);
-        exit;
-    }
-
-    $timestamp = time();
-    $random_str = bin2hex(random_bytes(4));
-    $filename = "proof_{$tracking_id}_{$timestamp}_{$random_str}.jpg";
-    $file_path = $upload_dir . '/' . $filename;
-
-    if (!move_uploaded_file($file['tmp_name'], $file_path)) {
-        $error_msg = 'Failed to save image';
-        if (!is_uploaded_file($file['tmp_name'])) {
-            $error_msg = 'Invalid upload - not from HTTP POST';
+        if ($file['size'] == 0) {
+            echo json_encode(['success' => false, 'message' => 'Empty file uploaded']);
+            exit;
         }
-        echo json_encode(['success' => false, 'message' => $error_msg]);
-        exit;
-    }
 
-    if (!file_exists($file_path)) {
-        echo json_encode(['success' => false, 'message' => 'File creation verification failed']);
-        exit;
-    }
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $file_type = $file['type'];
 
-    $proof_image_path = 'mechakeys/proofofdelivery/' . $filename;
+        $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($file_type, $allowed_types) && !in_array($file_extension, $allowed_extensions)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid image type. Allowed: JPG, PNG, GIF, WebP']);
+            exit;
+        }
+
+        if ($file['size'] > 5 * 1024 * 1024) {
+            echo json_encode(['success' => false, 'message' => 'File size too large (max 5MB)']);
+            exit;
+        }
+
+        $upload_dir = '../../proofofdelivery';
+        if (!is_dir($upload_dir)) {
+            if (!@mkdir($upload_dir, 0755, true)) {
+                echo json_encode(['success' => false, 'message' => 'Failed to create upload directory']);
+                exit;
+            }
+        }
+
+        if (!is_writable($upload_dir)) {
+            echo json_encode(['success' => false, 'message' => 'Upload directory not writable']);
+            exit;
+        }
+
+        $timestamp = time();
+        $random_str = bin2hex(random_bytes(4));
+        $filename = "proof_{$tracking_id}_{$timestamp}_{$random_str}.jpg";
+        $file_path = $upload_dir . '/' . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $file_path)) {
+            $error_msg = 'Failed to save image';
+            if (!is_uploaded_file($file['tmp_name'])) {
+                $error_msg = 'Invalid upload - not from HTTP POST';
+            }
+            echo json_encode(['success' => false, 'message' => $error_msg]);
+            exit;
+        }
+
+        if (!file_exists($file_path)) {
+            echo json_encode(['success' => false, 'message' => 'File creation verification failed']);
+            exit;
+        }
+
+        $proof_image_path = 'mechakeys/proofofdelivery/' . $filename;
+    }
 }
 
 $conn->begin_transaction();
@@ -121,7 +136,7 @@ try {
         $check_assignment->close();
     }
 
-    if ($new_status === 'Delivered' && $proof_image_path) {
+    if ($proof_image_path) {
         $update_tracking = $conn->prepare("UPDATE trackings SET DeliveryStatus = ?, DeliveryProof = ?, LastUpdated = NOW() WHERE TrackingID = ?");
         $update_tracking->bind_param("ssi", $mapped_status, $proof_image_path, $tracking_id);
     } else {
@@ -134,6 +149,34 @@ try {
     }
     $update_tracking->close();
 
+    $check_return = $conn->prepare("SELECT ReturnID FROM returns WHERE ReturnTrackingID = ?");
+    $check_return->bind_param("i", $tracking_id);
+    $check_return->execute();
+    $return_result = $check_return->get_result();
+    $is_return = $return_result->num_rows > 0;
+
+    if ($is_return) {
+        $return_data = $return_result->fetch_assoc();
+        $return_id = $return_data['ReturnID'];
+
+        $return_status_mapping = [
+            'In Transit' => 'In Transit',
+            'Delivered' => 'Returned'
+        ];
+
+        if (isset($return_status_mapping[$new_status])) {
+            $return_status = $return_status_mapping[$new_status];
+            $update_return = $conn->prepare("UPDATE returns SET Status = ?, UpdatedAt = NOW() WHERE ReturnID = ?");
+            $update_return->bind_param("si", $return_status, $return_id);
+
+            if (!$update_return->execute()) {
+                throw new Exception('Failed to update return status');
+            }
+            $update_return->close();
+        }
+    }
+    $check_return->close();
+
     $get_customer = $conn->prepare("SELECT CustomerID FROM orders WHERE OrderID = ?");
     $get_customer->bind_param("i", $order_id);
     $get_customer->execute();
@@ -142,15 +185,46 @@ try {
     $customer_id = $customer_data['CustomerID'];
     $get_customer->close();
 
-    $notification_title = "Delivery Status Updated";
-    $status_messages = [
-        'Picked' => "Your order #$order_id has been picked up and is on the way.",
-        'In Transit' => "Your order #$order_id is on the way to you!",
-        'Delivered' => "Your order #$order_id has been delivered. Thank you!"
-    ];
+    $refund_amount = 0;
+    if ($is_return) {
+        $get_order_amount = $conn->prepare("SELECT TotalAmount, Discount FROM orders WHERE OrderID = ?");
+        $get_order_amount->bind_param("i", $order_id);
+        $get_order_amount->execute();
+        $order_result = $get_order_amount->get_result();
+        $order_data = $order_result->fetch_assoc();
+        $refund_amount = $order_data['TotalAmount'];
+        $get_order_amount->close();
+
+        if ($return_status === 'Returned') {
+            $credit_coins = $conn->prepare("UPDATE users SET Coins = Coins + ? WHERE ID = ?");
+            $credit_coins->bind_param("di", $refund_amount, $customer_id);
+
+            if (!$credit_coins->execute()) {
+                throw new Exception('Failed to credit coins to user');
+            }
+            $credit_coins->close();
+        }
+    }
+
+
+    if ($is_return) {
+        $notification_title = "Return Pickup Status Updated";
+        $status_messages = [
+            'In Transit' => "Your return for order #$order_id is being transported to our warehouse.",
+            'Delivered' => "Your return for order #$order_id has been picked up and processed. ₱$refund_amount coins have been credited to your account as store credit."
+        ];
+        $notification_type = "return";
+    } else {
+        $notification_title = "Delivery Status Updated";
+        $status_messages = [
+            'Picked' => "Your order #$order_id has been picked up and is on the way.",
+            'In Transit' => "Your order #$order_id is on the way to you!",
+            'Delivered' => "Your order #$order_id has been delivered. Thank you!"
+        ];
+        $notification_type = "delivery";
+    }
 
     $notification_message = $status_messages[$new_status];
-    $notification_type = "delivery";
     $notification_status = "unread";
 
     $insert_notification = $conn->prepare("INSERT INTO notifications (CustomerID, Title, Message, Type, Status) VALUES (?, ?, ?, ?, ?)");
@@ -172,7 +246,7 @@ try {
 } catch (Exception $e) {
     $conn->rollback();
 
-    if ($proof_image_path && file_exists($upload_dir . '/' . $filename)) {
+    if ($proof_image_path && $upload_dir && $filename && file_exists($upload_dir . '/' . $filename)) {
         unlink($upload_dir . '/' . $filename);
     }
 

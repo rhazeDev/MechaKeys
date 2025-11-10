@@ -12,6 +12,7 @@ $customer_id = $_SESSION['user_id'];
 $orders_sql = "SELECT 
                 o.OrderID,
                 o.TotalAmount,
+                o.Discount,
                 o.PlaceOrdered,
                 o.TrackingID,
                 t.DeliveryStatus,
@@ -23,13 +24,16 @@ $orders_sql = "SELECT
                 u.Location as DeliveryPersonLocation,
                 p.Status as PaymentStatus,
                 COUNT(oi.OrderItemID) as ItemCount,
-                customer.Location as CustomerLocation
+                customer.Location as CustomerLocation,
+                r.ReturnID,
+                r.Status as ReturnStatus
             FROM Orders o
             INNER JOIN Trackings t ON o.TrackingID = t.TrackingID
             INNER JOIN Payments p ON o.PaymentID = p.PaymentID
             LEFT JOIN OrderItems oi ON o.OrderID = oi.OrderID
             LEFT JOIN users u ON t.DeliveryPersonID = u.ID AND u.Role = 'delivery'
             LEFT JOIN users customer ON o.CustomerID = customer.ID
+            LEFT JOIN returns r ON o.OrderID = r.OrderID
             WHERE o.CustomerID = ?
             GROUP BY o.OrderID
             ORDER BY o.PlaceOrdered DESC";
@@ -88,8 +92,15 @@ $orders_stmt->close();
                         $status = $order['DeliveryStatus'];
                         $statusClass = 'status-default';
                         $statusIcon = 'fa-circle';
-                        
-                        if ($status === 'Delivered') {
+
+                        $hasReturn = !empty($order['ReturnID']);
+                        $returnStatus = $order['ReturnStatus'] ?? '';
+
+                        if ($hasReturn && in_array($returnStatus, ['Pending', 'Approved', 'Picked', 'In Transit', 'Returned'])) {
+                            $status = 'Return ' . $returnStatus;
+                            $statusClass = 'status-return-' . strtolower(str_replace(' ', '-', $returnStatus));
+                            $statusIcon = 'fa-undo';
+                        } elseif ($status === 'Delivered') {
                             $statusClass = 'status-delivered';
                             $statusIcon = 'fa-check-circle';
                         } elseif ($status === 'Processing' || $status === 'Ready to Deliver') {
@@ -138,9 +149,27 @@ $orders_stmt->close();
                                     <div class="detail-item">
                                         <i class="fas fa-money-bill-wave"></i>
                                         <div>
-                                            <span class="detail-label">Total Amount</span>
+                                            <span class="detail-label">Subtotal</span>
                                             <span
                                                 class="detail-value">₱<?php echo number_format($order['TotalAmount'], 2); ?></span>
+                                        </div>
+                                    </div>
+                                    <?php if ($order['Discount'] > 0): ?>
+                                        <div class="detail-item">
+                                            <i class="fas fa-coins"></i>
+                                            <div>
+                                                <span class="detail-label">Coin Discount</span>
+                                                <span
+                                                    class="detail-value discount-amount">-₱<?php echo number_format($order['Discount'], 2); ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="detail-item">
+                                        <i class="fas fa-receipt"></i>
+                                        <div>
+                                            <span class="detail-label">Total Amount</span>
+                                            <span
+                                                class="detail-value total-amount">₱<?php echo number_format($order['TotalAmount'] - $order['Discount'], 2); ?></span>
                                         </div>
                                     </div>
                                     <div class="detail-item">
@@ -178,12 +207,15 @@ $orders_stmt->close();
                                     if ($proofPath && strpos($proofPath, 'mechakeys/') === 0) {
                                         $proofPath = substr($proofPath, strlen('mechakeys/'));
                                     }
-                                ?>
-                                <div class="delivery-proof-thumb" style="margin: 1rem 0;">
-                                    <a href="../<?php echo htmlspecialchars($proofPath, ENT_QUOTES); ?>" target="_blank" rel="noopener">
-                                        <img src="../<?php echo htmlspecialchars($proofPath, ENT_QUOTES); ?>" alt="Proof of Delivery" style="max-width:160px; border-radius:8px; border:1px solid #e5e7eb;">
-                                    </a>
-                                </div>
+                                    ?>
+                                    <div class="delivery-proof-thumb" style="margin: 1rem 0;">
+                                        <a href="../<?php echo htmlspecialchars($proofPath, ENT_QUOTES); ?>" target="_blank"
+                                            rel="noopener">
+                                            <img src="../<?php echo htmlspecialchars($proofPath, ENT_QUOTES); ?>"
+                                                alt="Proof of Delivery"
+                                                style="max-width:160px; border-radius:8px; border:1px solid #e5e7eb;">
+                                        </a>
+                                    </div>
                                 <?php endif; ?>
 
                                 <div class="tracking-timeline">
@@ -267,17 +299,54 @@ $orders_stmt->close();
                                     </div>
                                 </div>
 
+                                <?php if ($hasReturn): ?>
+                                    <div class="return-status-section">
+                                        <?php if ($returnStatus === 'Rejected'): ?>
+                                            <div class="return-status-message rejected">
+                                                <i class="fas fa-times-circle"></i>
+                                                <span>Return Request Rejected</span>
+                                                <small>Reason:
+                                                    <?php echo htmlspecialchars($order['ReturnStatus'] ?? 'No reason provided'); ?></small>
+                                            </div>
+                                        <?php elseif ($returnStatus === 'Approved'): ?>
+                                            <div class="return-status-message approved">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span>Return Approved - Prepare Item</span>
+                                                <small>Rider will pick up your return soon</small>
+                                            </div>
+                                        <?php elseif ($returnStatus === 'Picked' || $returnStatus === 'In Transit'): ?>
+                                            <div class="return-status-message in-transit">
+                                                <i class="fas fa-truck"></i>
+                                                <span>Return Being Picked Up</span>
+                                                <small>Rider is on the way</small>
+                                            </div>
+                                        <?php elseif ($returnStatus === 'Returned'): ?>
+                                            <div class="return-status-message completed">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span>Return Completed</span>
+                                                <small>Refund has been processed</small>
+                                            </div>
+                                        <?php elseif ($returnStatus === 'Pending'): ?>
+                                            <div class="return-status-badge">
+                                                <span class="status-pending-return">
+                                                    <i class="fas fa-clock"></i>
+                                                    Pending Return Request
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+
                                 <?php if ($status === 'In Transit' && $order['DeliveryPersonID'] > 0): ?>
-                                <div class="track-delivery-section">
-                                    <button class="btn-track-delivery" 
-                                            data-order-id="<?php echo $order['OrderID']; ?>"
+                                    <div class="track-delivery-section">
+                                        <button class="btn-track-delivery" data-order-id="<?php echo $order['OrderID']; ?>"
                                             data-customer-location="<?php echo htmlspecialchars($order['CustomerLocation'] ?? '', ENT_QUOTES); ?>"
                                             data-rider-location="<?php echo htmlspecialchars($order['DeliveryPersonLocation'] ?? '', ENT_QUOTES); ?>"
                                             data-rider-name="<?php echo htmlspecialchars($order['DeliveryPersonName'] ?? '', ENT_QUOTES); ?>">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        Track Live Delivery
-                                    </button>
-                                </div>
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            Track Live Delivery
+                                        </button>
+                                    </div>
                                 <?php endif; ?>
                             </div>
 
@@ -286,6 +355,37 @@ $orders_stmt->close();
                                     <i class="fas fa-eye"></i>
                                     View Details
                                 </button>
+                                <?php
+                                $canReturn = false;
+                                if ($status === 'Delivered' && !$hasReturn) {
+                                    $orderDate = strtotime($order['PlaceOrdered']);
+                                    $currentDate = time();
+                                    $daysDiff = ($currentDate - $orderDate) / (60 * 60 * 24);
+                                    $canReturn = $daysDiff <= 7;
+                                }
+                                if ($canReturn):
+                                    ?>
+                                    <button class="btn-return" onclick="checkReturnEligibility(<?php echo $order['OrderID']; ?>)">
+                                        <i class="fas fa-undo"></i>
+                                        Return Item
+                                    </button>
+                                <?php elseif ($hasReturn): ?>
+                                    <?php if ($returnStatus === 'Rejected'): ?>
+                                        <!-- Return Again button removed -->
+                                    <?php elseif ($returnStatus === 'Approved'): ?>
+                                        <button class="btn-track-return" onclick="trackReturn(<?php echo $order['OrderID']; ?>)">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            Track Return Pickup
+                                        </button>
+                                    <?php elseif ($returnStatus === 'Picked' || $returnStatus === 'In Transit'): ?>
+                                        <button class="btn-track-return" onclick="trackReturn(<?php echo $order['OrderID']; ?>)">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            Track Return Pickup
+                                        </button>
+                                    <?php elseif ($returnStatus === 'Returned'): ?>
+                                        <!-- Return Again button removed -->
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -359,6 +459,55 @@ $orders_stmt->close();
         </div>
     </div>
 
+    <!-- Return Request Modal -->
+    <div id="returnModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-undo"></i> Request Return/Refund</h2>
+                <button class="modal-close" onclick="closeReturnModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="returnModalBody">
+                <form id="returnForm">
+                    <input type="hidden" id="returnOrderId" name="order_id">
+
+                    <div class="form-group">
+                        <label for="returnReason"><i class="fas fa-comment"></i> Reason for Return</label>
+                        <textarea id="returnReason" name="return_reason" class="form-control"
+                            placeholder="Please provide details about why you want to return this item (minimum 10 characters)"
+                            rows="4" required></textarea>
+                        <small class="text-muted">Minimum 10 characters required</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="proofImage"><i class="fas fa-image"></i> Proof of Item Condition</label>
+                        <div class="file-upload-area" onclick="document.getElementById('proofImage').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload image or drag and drop</p>
+                            <small>PNG, JPG, WebP up to 5MB</small>
+                        </div>
+                        <input type="file" id="proofImage" name="proof_image" accept="image/*" style="display: none;"
+                            required>
+                        <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                            <img id="previewImg" src="" alt="Preview"
+                                style="max-width: 200px; border-radius: 8px; border: 1px solid #ddd;">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit-return" id="submitReturnBtn">
+                            <i class="fas fa-check-circle"></i> Submit Return Request
+                        </button>
+                        <button type="button" class="btn-cancel-return" onclick="closeReturnModal()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const profileDropdown = document.querySelector('.profile-dropdown');
@@ -381,14 +530,14 @@ $orders_stmt->close();
                     e.stopPropagation();
                 });
             }
-            
-                        document.querySelectorAll('.btn-track-delivery').forEach(button => {
-                button.addEventListener('click', function() {
+
+            document.querySelectorAll('.btn-track-delivery').forEach(button => {
+                button.addEventListener('click', function () {
                     const orderId = parseInt(this.dataset.orderId);
                     const customerLocation = this.dataset.customerLocation;
                     const riderLocation = this.dataset.riderLocation;
                     const riderName = this.dataset.riderName;
-                    
+
                     openTrackingModal(orderId, customerLocation, riderLocation, riderName);
                 });
             });
@@ -434,9 +583,9 @@ $orders_stmt->close();
                 </div>
             `).join('');
 
-                        const showTrackingButton = order.delivery_status === 'In Transit' && 
-                                      order.delivery_person_location && 
-                                      order.customer_location;
+            const showTrackingButton = order.delivery_status === 'In Transit' &&
+                order.delivery_person_location &&
+                order.customer_location;
 
             document.getElementById('modalBody').innerHTML = `
                 <div class="modal-order-info">
@@ -451,10 +600,10 @@ $orders_stmt->close();
                     <div class="modal-info-row">
                         <span class="modal-label">Status:</span>
                         ${(() => {
-                            const s = order.delivery_status || '';
-                            const cls = 'status-' + s.toLowerCase().replace(/\s+/g, '-');
-                            return `<span class="modal-value status-badge ${cls}">${s}</span>`;
-                        })()}
+                    const s = order.delivery_status || '';
+                    const cls = 'status-' + s.toLowerCase().replace(/\s+/g, '-');
+                    return `<span class="modal-value status-badge ${cls}">${s}</span>`;
+                })()}
                     </div>
                     <div class="modal-info-row">
                         <span class="modal-label">Payment:</span>
@@ -470,8 +619,22 @@ $orders_stmt->close();
                 </div>
                 
                 <div class="modal-total">
-                    <span><i class="fas fa-receipt"></i> Total Amount</span>
-                    <span class="total-value">₱${parseFloat(order.total_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                    <div class="modal-total-breakdown">
+                        <div class="total-row">
+                            <span>Subtotal</span>
+                            <span>₱${parseFloat(order.total_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        ${order.discount > 0 ? `
+                        <div class="total-row discount-row">
+                            <span>Coin Discount</span>
+                            <span>-₱${parseFloat(order.discount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        ` : ''}
+                        <div class="total-row final-total">
+                            <span><i class="fas fa-receipt"></i> Total Amount</span>
+                            <span>₱${parseFloat(order.total_amount - order.discount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="modal-section">
@@ -519,11 +682,11 @@ $orders_stmt->close();
         }
 
         function viewOrderLocation(orderId, customerLocation, riderLocation, riderName) {
-                        closeModal();
-            
-                        currentTrackingOrderId = orderId;
-            
-                        setTimeout(() => {
+            closeModal();
+
+            currentTrackingOrderId = orderId;
+
+            setTimeout(() => {
                 openTrackingModal(orderId, customerLocation, riderLocation, riderName);
             }, 300);
         }
@@ -542,7 +705,7 @@ $orders_stmt->close();
             }
         });
 
-                let trackingMap = null;
+        let trackingMap = null;
         let trackingMarkers = {};
         let routeLayer = null;
         let currentTrackingOrderId = null;
@@ -551,13 +714,13 @@ $orders_stmt->close();
         function openTrackingModal(orderId, customerLocation, riderLocation, riderName) {
             const modal = document.getElementById('trackingModal');
             modal.style.display = 'flex';
-            
+
             currentTrackingOrderId = orderId;
-            
+
             document.getElementById('trackingRiderName').textContent = riderName || 'Delivery Rider';
-            
-                        if (!riderLocation || riderLocation.trim() === '') {
-                                document.getElementById('trackingMap').innerHTML = `
+
+            if (!riderLocation || riderLocation.trim() === '') {
+                document.getElementById('trackingMap').innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 2rem;">
                         <i class="fas fa-map-marker-alt" style="font-size: 4rem; color: #3b82f6; margin-bottom: 1rem;"></i>
                         <h3 style="color: #1e293b; margin-bottom: 0.5rem;">Waiting for Rider Location</h3>
@@ -570,55 +733,61 @@ $orders_stmt->close();
                 `;
                 document.getElementById('trackingETA').textContent = 'Waiting...';
                 document.getElementById('trackingDistance').textContent = 'Waiting...';
-                
-                                startLiveLocationUpdates();
+
+                startLiveLocationUpdates();
                 return;
             }
-            
-                        const customerCoords = customerLocation.split(',').map(parseFloat);
+
+            const customerCoords = customerLocation.split(',').map(parseFloat);
             const riderCoords = riderLocation.split(',').map(parseFloat);
-            
-                        setTimeout(() => {
+
+            setTimeout(() => {
                 initTrackingMap(customerCoords, riderCoords);
-                                startLiveLocationUpdates();
+                startLiveLocationUpdates();
             }, 100);
         }
 
         function initTrackingMap(customerCoords, riderCoords) {
             const mapContainer = document.getElementById('trackingMap');
-            
+
             if (trackingMap) {
                 trackingMap.remove();
             }
 
             mapboxgl.accessToken = 'pk.eyJ1IjoicmhhemUiLCJhIjoiY21memQycHB5MDFybzJrc2d2MXZiejJ6bCJ9.SO6KCjBMT50xiSTvRy0cIw';
-            
+
             trackingMap = new mapboxgl.Map({
                 container: 'trackingMap',
                 style: 'mapbox://styles/mapbox/streets-v12',
-                center: riderCoords,                 zoom: 13
+                center: riderCoords, zoom: 13
             });
 
-            trackingMap.on('load', function() {
-                                const customerMarker = document.createElement('div');
+            trackingMap.on('load', function () {
+                const customerMarker = document.createElement('div');
                 customerMarker.className = 'tracking-marker customer-marker';
                 customerMarker.innerHTML = '<i class="fas fa-home"></i>';
-                
-                new mapboxgl.Marker(customerMarker)
-                    .setLngLat(customerCoords)                     .setPopup(new mapboxgl.Popup().setHTML('<strong>Delivery Destination</strong>'))
+
+                new mapboxgl.Marker(customerMarker, {
+                    anchor: 'center',
+                    offset: [0, 0]
+                })
+                    .setLngLat(customerCoords)
+                    .setPopup(new mapboxgl.Popup().setHTML('<strong>Delivery Destination</strong>'))
                     .addTo(trackingMap);
 
-                                const riderMarker = document.createElement('div');
+                const riderMarker = document.createElement('div');
                 riderMarker.className = 'tracking-marker rider-marker';
                 riderMarker.innerHTML = '<i class="fas fa-motorcycle"></i>';
-                
-                trackingMarkers.rider = new mapboxgl.Marker(riderMarker)
-                    .setLngLat(riderCoords)                     .setPopup(new mapboxgl.Popup().setHTML('<strong>Delivery Rider</strong><br>On the way'))
-                    .addTo(trackingMap);
 
-                                drawRoute(riderCoords, customerCoords);
+                trackingMarkers.rider = new mapboxgl.Marker(riderMarker, {
+                    anchor: 'center',
+                    offset: [0, 0]
+                })
+                    .setLngLat(riderCoords)
+                    .setPopup(new mapboxgl.Popup().setHTML('<strong>Delivery Rider</strong><br>On the way'))
+                    .addTo(trackingMap); drawRoute(riderCoords, customerCoords);
 
-                                const bounds = new mapboxgl.LngLatBounds();
+                const bounds = new mapboxgl.LngLatBounds();
                 bounds.extend(riderCoords);
                 bounds.extend(customerCoords);
                 trackingMap.fitBounds(bounds, { padding: 100 });
@@ -633,7 +802,7 @@ $orders_stmt->close();
                 .then(data => {
                     if (data.routes && data.routes.length > 0) {
                         const route = data.routes[0].geometry;
-                        
+
                         if (trackingMap.getSource('route')) {
                             trackingMap.removeLayer('route');
                             trackingMap.removeSource('route');
@@ -663,9 +832,9 @@ $orders_stmt->close();
                             }
                         });
 
-                                                const duration = Math.round(data.routes[0].duration / 60);                         document.getElementById('trackingETA').textContent = `${duration} min`;
-                        
-                        const distance = (data.routes[0].distance / 1000).toFixed(1);                         document.getElementById('trackingDistance').textContent = `${distance} km`;
+                        const duration = Math.round(data.routes[0].duration / 60); document.getElementById('trackingETA').textContent = `${duration} min`;
+
+                        const distance = (data.routes[0].distance / 1000).toFixed(1); document.getElementById('trackingDistance').textContent = `${distance} km`;
                     }
                 })
                 .catch(error => {
@@ -676,21 +845,21 @@ $orders_stmt->close();
         function closeTrackingModal() {
             const modal = document.getElementById('trackingModal');
             modal.style.display = 'none';
-            
-                        stopLiveLocationUpdates();
-            
+
+            stopLiveLocationUpdates();
+
             if (trackingMap) {
                 trackingMap.remove();
                 trackingMap = null;
             }
-            
+
             currentTrackingOrderId = null;
         }
 
         function startLiveLocationUpdates() {
-                        stopLiveLocationUpdates();
-            
-                        locationUpdateInterval = setInterval(() => {
+            stopLiveLocationUpdates();
+
+            locationUpdateInterval = setInterval(() => {
                 updateRiderLocation();
             }, 5000);
         }
@@ -711,30 +880,30 @@ $orders_stmt->close();
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.rider_location) {
-                                                const newCoords = data.rider_location.split(',').map(parseFloat);
-                                                
-                                                if (!trackingMap) {
-                                                        const modal = document.getElementById('trackingModal');
+                        const newCoords = data.rider_location.split(',').map(parseFloat);
+
+                        if (!trackingMap) {
+                            const modal = document.getElementById('trackingModal');
                             if (modal.style.display === 'flex') {
-                                                                fetch(`api/get_order_details.php?order_id=${currentTrackingOrderId}`)
+                                fetch(`api/get_order_details.php?order_id=${currentTrackingOrderId}`)
                                     .then(response => response.json())
                                     .then(orderData => {
                                         if (orderData.success && orderData.order.customer_location) {
                                             const customerCoords = orderData.order.customer_location.split(',').map(parseFloat);
-                                                                                        document.getElementById('trackingMap').innerHTML = '';
-                                                                                        initTrackingMap(customerCoords, newCoords);
+                                            document.getElementById('trackingMap').innerHTML = '';
+                                            initTrackingMap(customerCoords, newCoords);
                                         }
                                     });
                             }
                             return;
                         }
-                        
-                                                if (trackingMarkers.rider) {
+
+                        if (trackingMarkers.rider) {
                             trackingMarkers.rider.setLngLat(newCoords);
-                            
-                                                        const customerMarkers = document.querySelectorAll('.customer-marker');
+
+                            const customerMarkers = document.querySelectorAll('.customer-marker');
                             if (customerMarkers.length > 0) {
-                                                                const customerCoords = customerMarkers[0].closest('.mapboxgl-marker')?._lngLat;
+                                const customerCoords = customerMarkers[0].closest('.mapboxgl-marker')?._lngLat;
                                 if (customerCoords) {
                                     drawRoute(newCoords, [customerCoords.lng, customerCoords.lat]);
                                 }
@@ -750,13 +919,311 @@ $orders_stmt->close();
         window.onclick = function (event) {
             const orderModal = document.getElementById('orderModal');
             const trackingModal = document.getElementById('trackingModal');
-            
+            const returnModal = document.getElementById('returnModal');
+
             if (event.target === orderModal) {
                 closeModal();
             }
             if (event.target === trackingModal) {
                 closeTrackingModal();
             }
+            if (event.target === returnModal) {
+                closeReturnModal();
+            }
+        }
+
+
+        function refreshAllReturnStatuses() {
+            const orderCards = document.querySelectorAll('.order-card');
+
+            orderCards.forEach(card => {
+                const viewButton = card.querySelector('.btn-view-details');
+                if (viewButton) {
+                    const onclickAttr = viewButton.getAttribute('onclick');
+                    const orderId = parseInt(onclickAttr.match(/\d+/)[0]);
+
+                    fetch(`api/get_return_status.php?order_id=${orderId}`, {
+                        credentials: 'same-origin'
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success && data.has_return) {
+                                const returnStatus = data.return.status;
+                                updateReturnStatusUI(card, returnStatus, data.return);
+                            }
+                        })
+                        .catch(error => console.error('Error checking return status:', error));
+                }
+            });
+        }
+
+        function updateReturnStatusUI(cardElement, returnStatus, returnData) {
+            const body = cardElement.querySelector('.order-card-body');
+            const footer = cardElement.querySelector('.order-card-footer');
+            const existingStatusSection = body.querySelector('.return-status-section');
+            const returnButton = footer.querySelector('.btn-return');
+            const trackButton = footer.querySelector('.btn-track-return');
+
+            if (existingStatusSection) existingStatusSection.remove();
+
+            if (returnButton) returnButton.remove();
+            if (trackButton) trackButton.remove();
+
+            const statusBadge = cardElement.querySelector('.order-status-badge');
+            if (statusBadge) {
+                statusBadge.innerHTML = `<i class="fas fa-undo"></i> Return ${returnStatus}`;
+                statusBadge.className = `order-status-badge status-return-${returnStatus.toLowerCase().replace(' ', '-')}`;
+            }
+
+            let statusSectionHtml = '';
+            if (returnStatus === 'Rejected') {
+                statusSectionHtml = `
+                    <div class="return-status-section">
+                        <div class="return-status-message rejected">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Return Request Rejected</span>
+                            <small>Reason: ${returnData.admin_message || 'No reason provided'}</small>
+                        </div>
+                    </div>
+                `;
+            } else if (returnStatus === 'Approved') {
+                statusSectionHtml = `
+                    <div class="return-status-section">
+                        <div class="return-status-message approved">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Return Approved - Prepare Item</span>
+                            <small>Rider will pick up your return soon</small>
+                        </div>
+                    </div>
+                `;
+                footer.insertAdjacentHTML('beforeend', `
+                    <button class="btn-track-return" onclick="trackReturn(${returnData.order_id})">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Track Return Pickup
+                    </button>
+                `);
+            } else if (returnStatus === 'Picked' || returnStatus === 'In Transit') {
+                statusSectionHtml = `
+                    <div class="return-status-section">
+                        <div class="return-status-message in-transit">
+                            <i class="fas fa-truck"></i>
+                            <span>Return Being Picked Up</span>
+                            <small>Rider is on the way</small>
+                        </div>
+                    </div>
+                `;
+                footer.insertAdjacentHTML('beforeend', `
+                    <button class="btn-track-return" onclick="trackReturn(${returnData.order_id})">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Track Return Pickup
+                    </button>
+                `);
+            } else if (returnStatus === 'Returned') {
+                statusSectionHtml = `
+                    <div class="return-status-section">
+                        <div class="return-status-message completed">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Return Completed</span>
+                            <small>Refund has been processed</small>
+                        </div>
+                    </div>
+                `;
+            } else if (returnStatus === 'Pending') {
+                statusSectionHtml = `
+                    <div class="return-status-section">
+                        <div class="return-status-badge">
+                            <span class="status-pending-return">
+                                <i class="fas fa-clock"></i>
+                                Pending Return Request
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const trackSection = body.querySelector('.track-delivery-section');
+            if (trackSection) {
+                trackSection.insertAdjacentHTML('beforebegin', statusSectionHtml);
+            } else {
+                body.insertAdjacentHTML('beforeend', statusSectionHtml);
+            }
+        }
+
+        function trackReturn(orderId) {
+            fetch(`api/get_return_status.php?order_id=${orderId}`, {
+                credentials: 'same-origin'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.has_return) {
+                        const returnData = data.return;
+                        if (returnData.return_rider_location && returnData.customer_location) {
+                            openTrackingModal(orderId, returnData.customer_location, returnData.return_rider_location, returnData.return_rider_name || 'Return Rider');
+                        } else {
+                            alert('Return tracking information is not available yet. Please try again later.');
+                        }
+                    } else if (data.success && !data.has_return) {
+                        alert('No return request found for this order.');
+                    } else {
+                        alert('Error: ' + (data.message || 'Unknown error occurred'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading return details:', error);
+                    alert('Failed to load return tracking information. Please try again.');
+                });
+        }
+
+        function checkReturnEligibility(orderId) {
+            fetch(`api/get_return_button_status.php?order_id=${orderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.can_return) {
+                            openReturnModal(orderId);
+                        } else {
+                            let message = data.message || 'Cannot return this order';
+                            if (!data.is_delivered) {
+                                message = 'This order has not been delivered yet.';
+                            } else if (!data.is_within_return_window) {
+                                message = `Return window has expired. Returns must be requested within 7 days of delivery.`;
+                            }
+                            alert(message);
+                        }
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to check return eligibility');
+                });
+        }
+
+        function openReturnModal(orderId) {
+            document.getElementById('returnOrderId').value = orderId;
+            document.getElementById('returnForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('returnModal').style.display = 'flex';
+        }
+
+        function closeReturnModal() {
+            document.getElementById('returnModal').style.display = 'none';
+            document.getElementById('returnForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            refreshAllReturnStatuses();
+
+            const fileInput = document.getElementById('proofImage');
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            const uploadArea = document.querySelector('.file-upload-area');
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (event) {
+                            previewImg.src = event.target.result;
+                            imagePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+
+                uploadArea.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#3b82f6';
+                    uploadArea.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+                });
+
+                uploadArea.addEventListener('dragleave', function (e) {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#ddd';
+                    uploadArea.style.backgroundColor = 'transparent';
+                });
+
+                uploadArea.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    uploadArea.style.borderColor = '#ddd';
+                    uploadArea.style.backgroundColor = 'transparent';
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        fileInput.files = files;
+                        const event = new Event('change', { bubbles: true });
+                        fileInput.dispatchEvent(event);
+                    }
+                });
+            }
+
+            const returnForm = document.getElementById('returnForm');
+            if (returnForm) {
+                returnForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    submitReturnRequest();
+                });
+            }
+        });
+
+        function submitReturnRequest() {
+            const orderId = document.getElementById('returnOrderId').value;
+            const returnReason = document.getElementById('returnReason').value.trim();
+            const proofImage = document.getElementById('proofImage').files[0];
+            const submitBtn = document.getElementById('submitReturnBtn');
+
+            if (!returnReason || returnReason.length < 10) {
+                alert('Please provide a return reason with at least 10 characters');
+                return;
+            }
+
+            if (!proofImage) {
+                alert('Please upload a proof image');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            const formData = new FormData();
+            formData.append('order_id', orderId);
+            formData.append('return_reason', returnReason);
+            formData.append('proof_image', proofImage);
+
+            fetch('api/submit_return.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        closeReturnModal();
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Return Request';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to submit return request');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Submit Return Request';
+                });
         }
     </script>
 </body>

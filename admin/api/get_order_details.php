@@ -22,6 +22,7 @@ $order_query = "SELECT
                     o.TrackingID,
                     o.PaymentID,
                     o.TotalAmount,
+                    o.Discount,
                     o.PlaceOrdered,
                     u.FullName as CustomerName,
                     u.Email as CustomerEmail,

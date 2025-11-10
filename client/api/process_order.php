@@ -30,6 +30,25 @@ if (!preg_match('/^09\d{9}$/', $user['Contact'])) {
 
 $order_notes = isset($_POST['order_notes']) ? trim($_POST['order_notes']) : '';
 $payment_method = isset($_POST['payment_method']) ? $_POST['payment_method'] : 'cod';
+$coins_used = isset($_POST['coins_used']) ? floatval($_POST['coins_used']) : 0;
+
+if ($coins_used < 0) {
+    echo json_encode(['success' => false, 'message' => 'Invalid coins amount']);
+    exit;
+}
+
+$coins_check_stmt = $conn->prepare("SELECT Coins FROM users WHERE ID = ?");
+$coins_check_stmt->bind_param("i", $customer_id);
+$coins_check_stmt->execute();
+$coins_check_result = $coins_check_stmt->get_result();
+$coins_data = $coins_check_result->fetch_assoc();
+$customer_coins = $coins_data['Coins'] ?? 0;
+$coins_check_stmt->close();
+
+if ($coins_used > $customer_coins) {
+    echo json_encode(['success' => false, 'message' => 'Insufficient coins']);
+    exit;
+}
 
 $conn->begin_transaction();
 
@@ -73,8 +92,11 @@ try {
         throw new Exception('Some items are out of stock');
     }
 
+    $coins_discount = min($coins_used, $total_amount);
+    $final_amount = max(0, $total_amount - $coins_discount);
+
     $payment_stmt = $conn->prepare("INSERT INTO Payments (OrderID, Amount, Status, TransactionDate) VALUES (0, ?, 'Pending', NOW())");
-    $payment_stmt->bind_param("d", $total_amount);
+    $payment_stmt->bind_param("d", $final_amount);
     $payment_stmt->execute();
     $payment_id = $conn->insert_id;
     $payment_stmt->close();
@@ -84,8 +106,8 @@ try {
     $tracking_id = $conn->insert_id;
     $tracking_stmt->close();
 
-    $order_stmt = $conn->prepare("INSERT INTO Orders (CustomerID, TrackingID, PaymentID, TotalAmount, PlaceOrdered) VALUES (?, ?, ?, ?, NOW())");
-    $order_stmt->bind_param("iiid", $customer_id, $tracking_id, $payment_id, $total_amount);
+    $order_stmt = $conn->prepare("INSERT INTO Orders (CustomerID, TrackingID, PaymentID, TotalAmount, Discount, PlaceOrdered) VALUES (?, ?, ?, ?, ?, NOW())");
+    $order_stmt->bind_param("iiidd", $customer_id, $tracking_id, $payment_id, $total_amount, $coins_discount);
     $order_stmt->execute();
     $order_id = $conn->insert_id;
     $order_stmt->close();
@@ -121,8 +143,20 @@ try {
     $clear_cart_stmt->execute();
     $clear_cart_stmt->close();
 
+    if ($coins_discount > 0) {
+        $deduct_coins_stmt = $conn->prepare("UPDATE users SET Coins = Coins - ? WHERE ID = ?");
+        $deduct_coins_stmt->bind_param("di", $coins_discount, $customer_id);
+        if (!$deduct_coins_stmt->execute()) {
+            throw new Exception('Failed to deduct coins');
+        }
+        $deduct_coins_stmt->close();
+    }
+
     $notif_title = "Order Placed Successfully";
     $notif_message = "Your order #" . $order_id . " has been placed successfully. Total: ₱" . number_format($total_amount, 2);
+    if ($coins_discount > 0) {
+        $notif_message .= " (Discount with coins: ₱" . number_format($coins_discount, 2) . ")";
+    }
     $notif_type = "order";
     $notif_status = "unread";
 

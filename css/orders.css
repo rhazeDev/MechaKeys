@@ -263,6 +263,14 @@
     color: var(--text-light);
 }
 
+.detail-value.discount-amount {
+    color: #dc2626;
+}
+
+.detail-value.total-amount {
+    color: var(--primary);
+}
+
 /* Courier Info */
 .courier-info {
     padding: 12px 16px;
@@ -369,7 +377,7 @@
 }
 
 .btn-view-details {
-    padding: 12px 24px;
+    padding: 8px 16px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     border: none;
@@ -388,7 +396,7 @@
 }
 
 .btn-secondary {
-    padding: 12px 24px;
+    padding: 8px 16px;
     background: transparent;
     border: 2px solid var(--primary);
     color: var(--primary);
@@ -622,9 +630,48 @@
     border: 2px solid var(--primary);
 }
 
+.modal-total-breakdown {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.total-row.discount-row {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.total-row.final-total {
+    border-top: 2px solid #e5e7eb;
+    padding-top: 12px;
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
 .total-value {
     font-size: 22px;
     color: var(--primary);
+}
+
+/* Return Status Section */
+.return-status-section {
+    margin: 20px 0;
+    padding: 16px;
+    background: var(--background);
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
 }
 
 /* Responsive Design */
@@ -701,9 +748,12 @@
     }
 
     .btn-view-details,
-    .btn-secondary {
+    .btn-secondary,
+    .btn-return,
+    .btn-track-return {
         width: 100%;
         justify-content: center;
+        padding: 10px 16px;
     }
 
     .modal-content {
@@ -770,8 +820,7 @@
         font-size: 14px;
     }
 }
- 
- /* Live Tracking Styles */
+
 .track-delivery-section {
     margin-top: 20px;
     padding-top: 20px;
@@ -894,7 +943,6 @@
 .rider-marker {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
-    animation: bounce 2s ease-in-out infinite;
 }
 
 @keyframes bounce {
@@ -1137,5 +1185,350 @@
 
 .btn-view-location i {
     font-size: 18px;
+}
+
+/* Return/Refund Button Styles */
+.order-card-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-return {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.btn-return:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-return:active {
+    transform: translateY(0);
+}
+
+/* Return Modal Form Styles */
+.modal-body .form-group {
+    margin-bottom: 24px;
+}
+
+.modal-body label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.modal-body label i {
+    margin-right: 6px;
+    color: var(--primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.text-muted {
+    color: #999;
+    font-size: 12px;
+    display: block;
+    margin-top: 6px;
+}
+
+.file-upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.file-upload-area i {
+    font-size: 32px;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: block;
+}
+
+.file-upload-area p {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.file-upload-area small {
+    color: #999;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-submit-return,
+.btn-cancel-return {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-submit-return {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-submit-return:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-submit-return:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-cancel-return {
+    background: #e5e7eb;
+    color: var(--text);
+}
+
+.btn-cancel-return:hover {
+    background: #d1d5db;
+}
+
+/* Pending Return Status Badge */
+.return-status-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-pending-return {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.status-pending-return i {
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+    }
+}
+
+/* Return Status Messages */
+.return-status-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 200px;
+}
+
+.return-status-message i {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.return-status-message small {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.return-status-message.rejected {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.return-status-message.rejected i {
+    color: #dc2626;
+}
+
+.return-status-message.approved {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+    border: 1px solid #86efac;
+}
+
+.return-status-message.approved i {
+    color: #16a34a;
+}
+
+.return-status-message.in-transit {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #2563eb;
+    border: 1px solid #93c5fd;
+}
+
+.return-status-message.in-transit i {
+    color: #2563eb;
+}
+
+.return-status-message.completed {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #16a34a;
+    border: 1px solid #86efac;
+}
+
+.return-status-message.completed i {
+    color: #16a34a;
+}
+
+/* Return Status Badge Colors */
+.status-return-pending {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+.status-return-approved {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+}
+
+.status-return-picked {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+}
+
+.status-return-in-transit {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+}
+
+.status-return-rejected {
+    background: linear-gradient(135deg, #fedbdb 0%, #febfbf 100%);
+    color: #af1e1e;
+}
+
+.status-return-returned {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    color: #166534;
+}
+
+/* Track Return Button */
+.btn-track-return {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.btn-track-return:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-track-return:active {
+    transform: translateY(0);
+}
+
+.btn-track-return i {
+    font-size: 16px;
+}
+
+/* Responsive adjustments for return elements */
+@media (max-width: 768px) {
+    .return-status-message {
+        min-width: 100%;
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .return-status-message i {
+        font-size: 20px;
+    }
+
+    .btn-track-return {
+        min-width: 100%;
+        margin-top: 8px;
+    }
+
+    .order-card-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
 }
 
