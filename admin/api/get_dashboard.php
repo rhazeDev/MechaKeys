@@ -34,6 +34,43 @@ while ($row = $products_result->fetch_assoc()) {
     $products[] = $row;
 }
 
+$order_status_query = "SELECT t.DeliveryStatus, COUNT(*) as count 
+                      FROM trackings t 
+                      GROUP BY t.DeliveryStatus";
+$order_status_result = $conn->query($order_status_query);
+$order_status_data = [];
+while ($row = $order_status_result->fetch_assoc()) {
+    $order_status_data[] = $row;
+}
+
+$revenue_query = "SELECT DATE(o.PlaceOrdered) as date, SUM(o.TotalAmount) as revenue
+                 FROM orders o 
+                 JOIN trackings t ON o.TrackingID = t.TrackingID
+                 WHERE t.DeliveryStatus = 'Delivered' AND o.PlaceOrdered >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                 GROUP BY DATE(o.PlaceOrdered)
+                 ORDER BY DATE(o.PlaceOrdered)";
+$revenue_result = $conn->query($revenue_query);
+$revenue_data = [];
+while ($row = $revenue_result->fetch_assoc()) {
+    $revenue_data[] = $row;
+}
+
+$categories_query = "SELECT p.Category, COUNT(*) as count 
+                    FROM products p 
+                    GROUP BY p.Category";
+$categories_result = $conn->query($categories_query);
+$categories_data = [];
+while ($row = $categories_result->fetch_assoc()) {
+    $categories_data[] = $row;
+}
+
+$stock_levels_query = "SELECT 
+    SUM(CASE WHEN StockQuantity = 0 THEN 1 ELSE 0 END) as out_of_stock,
+    SUM(CASE WHEN StockQuantity > 0 AND StockQuantity < 10 THEN 1 ELSE 0 END) as low_stock,
+    SUM(CASE WHEN StockQuantity >= 10 THEN 1 ELSE 0 END) as good_stock
+    FROM productvariations";
+$stock_levels = $conn->query($stock_levels_query)->fetch_assoc();
+
 echo json_encode([
     'success' => true,
     'stats' => [
@@ -46,7 +83,13 @@ echo json_encode([
         'delivered_today' => $delivered_today,
         'pending_assignments' => $pending_assignments
     ],
-    'products' => $products
+    'products' => $products,
+    'charts' => [
+        'order_status' => $order_status_data,
+        'revenue' => $revenue_data,
+        'categories' => $categories_data,
+        'stock_levels' => $stock_levels
+    ]
 ]);
 
 $conn->close();

@@ -64,6 +64,7 @@ function showSection(sectionId) {
 
     if (sectionId === 'dashboard') {
         loadDashboard();
+        loadDashboardCharts();
     } else if (sectionId === 'products') {
         loadProducts();
     } else if (sectionId === 'inventory') {
@@ -324,6 +325,9 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
     window.scrollTo(0, 0);
 });
 
+document.addEventListener('DOMContentLoaded', function () {
+    showSection('dashboard');
+});
 
 
 
