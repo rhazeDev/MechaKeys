@@ -23,6 +23,11 @@ async function loadDeliveryRiders(attempt = 0) {
             document.getElementById('completedDeliveriesCount').textContent = result.stats.completedToday || 0;
 
             if (result.riders && result.riders.length > 0) {
+                const formatMoney = (value) => {
+                    const num = parseFloat(value) || 0;
+                    return '₱' + num.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                };
+
                 tbody.innerHTML = result.riders.map(rider => {
                     const statusBadge = rider.ActiveDeliveries > 0
                         ? '<span class="badge success">Active</span>'
@@ -35,6 +40,7 @@ async function loadDeliveryRiders(attempt = 0) {
                             <td>${rider.Email}</td>
                             <td>${rider.Contact}</td>
                             <td>${rider.Address}</td>
+                            <td>${formatMoney(rider.TotalUnremitted)}</td>
                             <td>${statusBadge}</td>
                             <td>
                                 <span class="badge ${rider.ActiveDeliveries > 0 ? 'warning' : 'default'}">
@@ -58,15 +64,24 @@ async function loadDeliveryRiders(attempt = 0) {
                     `;
                 }).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No delivery riders found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No delivery riders found</td></tr>';
+            }
+            if (typeof result.stats.totalUnremitted !== 'undefined') {
+                const remEl = document.getElementById('totalUnremittedAmount');
+                if (remEl) remEl.textContent = '₱' + parseFloat(result.stats.totalUnremitted || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            if (typeof result.stats.totalCollectedToday !== 'undefined') {
+                const colEl = document.getElementById('totalCollectedToday');
+                if (colEl) colEl.textContent = '₱' + parseFloat(result.stats.totalCollectedToday || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
         } else {
             showError(result.message || 'Failed to load riders', 'Load Failed');
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="color: red;">Failed to load riders</td></tr>';
         }
     } catch (error) {
         console.error('Failed to load riders:', error);
         document.getElementById('ridersTableBody').innerHTML =
-            '<tr><td colspan="8" class="text-center" style="color: red;">Failed to load delivery riders</td></tr>';
+            '<tr><td colspan="9" class="text-center" style="color: red;">Failed to load delivery riders</td></tr>';
     }
 }
 
@@ -226,11 +241,9 @@ function openRiderStats(riderId) {
     currentRiderId = riderId;
     document.getElementById('currentRiderId').value = riderId;
     const modal = document.getElementById('riderStatsModal');
-    console.log('[RiderStats] openRiderStats called for riderId=', riderId);
     try {
         if (modal) {
             modal.style.display = 'flex';
-            console.log('[RiderStats] modal shown via inline style; computed display=', window.getComputedStyle(modal).display);
         } else {
             console.warn('[RiderStats] modal element not found');
         }
@@ -246,10 +259,11 @@ function openRiderStats(riderId) {
             namePlaceholder.textContent = rname;
         }
     } catch (e) {
-        console.debug('[RiderStats] unable to set rider name in modal', e);
     }
 
     loadRiderStats(riderId);
+    if (typeof changeRemittanceStatus === 'function') {
+    }
 }
 
 function closeRiderStatsModal() {
@@ -265,7 +279,6 @@ async function loadRiderStats(riderId) {
 
     try {
         const url = `api/get_rider_stats.php?rider_id=${riderId}&filter=${filter}`;
-        console.log('[RiderStats] fetching', url);
         const response = await fetch(url, {
             credentials: 'same-origin'
         });
@@ -276,7 +289,6 @@ async function loadRiderStats(riderId) {
             result = JSON.parse(raw);
         } catch (parseError) {
             console.error('Failed to parse JSON from get_rider_stats.php:', parseError);
-            console.debug('Raw response:', raw);
             deliveriesBody.innerHTML = `<tr><td colspan="6" style="text-align: left; color: #f44336; white-space: pre-wrap;">Unexpected response from server:\n${escapeHtml(raw)}</td></tr>`;
             return;
         }
@@ -291,7 +303,6 @@ async function loadRiderStats(riderId) {
         const stats = result.stats;
         const deliveries = result.deliveries;
 
-        console.log('[RiderStats] API result', result);
         document.getElementById('statsTotal').textContent = stats.total;
         document.getElementById('statsSuccessful').textContent = stats.successful;
         document.getElementById('statsInProgress').textContent = stats.in_progress;
@@ -303,7 +314,7 @@ async function loadRiderStats(riderId) {
                     <tr>
                         <td>#${String(d.OrderID).padStart(6, '0')}</td>
                         <td>${d.CustomerName}</td>
-                        <td>₱${parseFloat(d.TotalAmount).toFixed(2)}</td>
+                    <td>₱${parseFloat(d.TotalAmount - (d.Discount || 0)).toFixed(2)}</td>
                         <td><span class="badge ${getStatusClass(d.DeliveryStatus)}">${d.DeliveryStatus}</span></td>
                         <td>${new Date(d.LastUpdated).toLocaleDateString()}</td>
                         <td>
@@ -312,12 +323,72 @@ async function loadRiderStats(riderId) {
                     </tr>
                 `).join('');
         }
+        const remTableBody = document.getElementById('riderRemittancesBody');
+        if (!remTableBody) {
+        } else {
+            const remittances = result.remittances || [];
+            if (remittances.length === 0) {
+                remTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No remittances found</td></tr>';
+            } else {
+                remTableBody.innerHTML = remittances.map(r => `
+                        <tr>
+                            <td>#${r.RemittanceID}</td>
+                            <td>₱${parseFloat(r.Amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                            <td>${r.PeriodStart ? r.PeriodStart + (r.PeriodEnd ? ' - ' + r.PeriodEnd : '') : '-'}</td>
+                            <td>${new Date(r.TransactionDate).toLocaleDateString()}</td>
+                            <td>${r.PaymentMethod || 'Cash'}</td>
+                            <td>${r.Reference || '-'}</td>
+                            <td>${r.Status ? `<span class="badge ${r.Status === 'Paid' ? 'success' : r.Status === 'Pending' ? 'warning' : 'error'}">${r.Status}</span>` : '-'}</td>
+                            <td onclick="event.stopPropagation()">
+                                ${r.Status === 'Pending' ? `
+                                    <button class="btn-small btn-success" onclick="changeRemittanceStatus(${r.RemittanceID}, 'Paid')">Mark Paid</button>
+                                    <button class="btn-small btn-danger" onclick="changeRemittanceStatus(${r.RemittanceID}, 'Cancelled')">Cancel</button>
+                                ` : r.Status === 'Paid' ? `
+                                    <button class="btn-small btn-secondary" onclick="changeRemittanceStatus(${r.RemittanceID}, 'Pending')">Reopen</button>
+                                ` : `<button class="btn-small btn-secondary" onclick="changeRemittanceStatus(${r.RemittanceID}, 'Pending')">Reopen</button>`}
+                            </td>
+                        </tr>
+                    `).join('');
+            }
+        }
+
+        if (document.getElementById('statsUnremitted')) {
+            const remTotal = parseFloat(result.stats.unremitted_total || 0);
+            document.getElementById('statsUnremitted').textContent = '₱' + remTotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        }
     } catch (error) {
         console.error('Error:', error);
         deliveriesBody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #f44336;">Failed to load rider statistics</td></tr>';
     }
 }
 
+function changeRemittanceStatus(remittanceId, newStatus) {
+    showCustomConfirm(`Are you sure you want to set the remittance #${remittanceId} to <strong>${newStatus}</strong>?`, async () => {
+        try {
+            const formData = new FormData();
+            formData.append('remittance_id', remittanceId);
+            formData.append('status', newStatus);
+
+            const response = await fetch('api/update_remittance_status.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            });
+            const result = await response.json();
+            if (result.success) {
+                showToast('Remittance updated', 'success', 'Updated');
+                const riderId = document.getElementById('currentRiderId').value;
+                if (riderId) loadRiderStats(riderId);
+                loadDeliveryRiders();
+            } else {
+                showError(result.message || 'Failed to update remittance', 'Error');
+            }
+        } catch (err) {
+            console.error('Error updating remittance status:', err);
+            showError('An error occurred while updating remittance status', 'Error');
+        }
+    });
+}
 function attachRiderStatsHandler() {
     const tbody = document.getElementById('ridersTableBody');
     if (!tbody) {
@@ -332,7 +403,6 @@ function attachRiderStatsHandler() {
             const tr = statsBtn.closest('tr');
             if (!tr) return;
             const id = tr.getAttribute('data-rider-id');
-            console.log('[RiderStats] stats button clicked, riderId=', id);
             if (id) {
                 openRiderStats(parseInt(id, 10));
             }
@@ -342,10 +412,153 @@ function attachRiderStatsHandler() {
         const tr = e.target.closest('tr[data-rider-id]');
         if (tr && !e.target.closest('.action-buttons')) {
             const id = tr.getAttribute('data-rider-id');
-            console.log('[RiderStats] rider row clicked, riderId=', id);
             if (id) openRiderStats(parseInt(id, 10));
         }
     });
+}
+function openCreateRemittanceModal(riderId) {
+    const modal = document.getElementById('createRemittanceModal');
+    const input = document.getElementById('createRiderId');
+    input.value = riderId;
+    const select = document.getElementById('remitPeriod');
+    if (select) select.value = 'today';
+    document.getElementById('createRemittanceForm').reset();
+    document.getElementById('customPeriodFields').style.display = 'none';
+    if (modal) modal.style.display = 'flex';
+    loadRemittanceOrders();
+}
+
+function closeCreateRemittanceModal() {
+    const modal = document.getElementById('createRemittanceModal');
+    const body = document.getElementById('createRemittanceOrdersBody');
+    if (modal) modal.style.display = 'none';
+    if (body) body.innerHTML = '<tr><td colspan="5" class="text-center">No orders loaded</td></tr>';
+    document.getElementById('createRemittanceAmount').value = '';
+}
+
+async function loadRemittanceOrders() {
+    const riderId = document.getElementById('createRiderId').value;
+    const filter = document.getElementById('remitPeriod').value;
+    const startEl = document.getElementById('remitStart');
+    const endEl = document.getElementById('remitEnd');
+    const body = document.getElementById('createRemittanceOrdersBody');
+    const amountInput = document.getElementById('createRemittanceAmount');
+
+    if (!riderId) return;
+    body.innerHTML = '<tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading orders...</td></tr>';
+    const customFields = document.getElementById('customPeriodFields');
+    if (filter === 'custom') {
+        customFields.style.display = 'flex';
+    } else {
+        customFields.style.display = 'none';
+    }
+
+    let url = `api/get_rider_candidate_orders.php?rider_id=${riderId}&filter=${encodeURIComponent(filter)}`;
+    if (filter === 'custom' && startEl && endEl && startEl.value && endEl.value) {
+        url += `&period_start=${encodeURIComponent(startEl.value)}&period_end=${encodeURIComponent(endEl.value)}`;
+    }
+
+    try {
+        const response = await fetch(url, { credentials: 'same-origin' });
+        const json = await response.json();
+        if (!json.success) {
+            body.innerHTML = `<tr><td colspan="5" class="text-center" style="color:red;">${json.message || 'Failed to load orders'}</td></tr>`;
+            amountInput.value = '';
+            return;
+        }
+
+        const orders = json.orders || [];
+        if (orders.length === 0) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;">No eligible delivered orders found for this period</td></tr>';
+            amountInput.value = '';
+            return;
+        }
+
+        body.innerHTML = orders.map(o => `
+            <tr>
+                <td><input class="remitOrderCheckbox" type="checkbox" data-orderid="${o.OrderID}" data-amount="${(o.TotalAmount - (o.Discount || 0))}" checked onchange="toggleRemittanceOrder(this)"></td>
+                <td>#${String(o.OrderID).padStart(6, '0')}</td>
+                <td>${escapeHtml(o.CustomerName || '')}</td>
+                <td>₱${parseFloat((o.TotalAmount - (o.Discount || 0))).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                <td>${new Date(o.LastUpdated).toLocaleDateString()}</td>
+            </tr>
+        `).join('');
+
+        const total = orders.reduce((acc, cur) => acc + (parseFloat(cur.TotalAmount || 0) - (parseFloat(cur.Discount || 0) || 0)), 0);
+        amountInput.value = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    } catch (err) {
+        console.error('Error loading candidate orders:', err);
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color: red;">Failed to load candidate orders</td></tr>';
+        amountInput.value = '';
+    }
+}
+
+function toggleRemittanceOrder(checkbox) {
+    const amountInput = document.getElementById('createRemittanceAmount');
+    if (!amountInput) return;
+    const checkboxes = document.querySelectorAll('.remitOrderCheckbox');
+    let total = 0;
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            total += parseFloat(cb.getAttribute('data-amount') || 0);
+        }
+    });
+    amountInput.value = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+}
+
+async function submitCreateRemittance(event) {
+    event.preventDefault();
+    const riderId = document.getElementById('createRiderId').value;
+    if (!riderId) return showError('Rider not selected', 'Validation');
+    const amountInput = document.getElementById('createRemittanceAmount');
+    const notes = document.getElementById('createRemittanceNotes').value;
+    const reference = document.getElementById('createRemittanceReference').value;
+    const filter = document.getElementById('remitPeriod').value;
+    const start = document.getElementById('remitStart').value; const end = document.getElementById('remitEnd').value;
+
+    const selected = Array.from(document.querySelectorAll('.remitOrderCheckbox')).filter(cb => cb.checked).map(cb => cb.getAttribute('data-orderid'));
+    if (selected.length === 0) return showError('No orders selected', 'Validation');
+
+    const amountStr = amountInput.value.replace(/[₱, ]/g, '');
+    const amount = parseFloat(amountStr) || 0;
+    if (amount <= 0) return showError('Invalid amount', 'Validation');
+
+    const fd = new FormData();
+    fd.append('rider_id', riderId);
+    fd.append('amount', amount);
+    if (filter === 'custom' && start && end) {
+        fd.append('period_start', start);
+        fd.append('period_end', end);
+    } else if (filter === 'today') {
+        fd.append('period_start', '');
+        fd.append('period_end', '');
+    } else if (filter === 'month') {
+        fd.append('period_start', '');
+        fd.append('period_end', '');
+    }
+    fd.append('reference', reference);
+    fd.append('notes', notes);
+    selected.forEach(id => fd.append('order_ids[]', id));
+
+    try {
+        const response = await fetch('api/add_remittance.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: fd
+        });
+        const result = await response.json();
+        if (result.success) {
+            showToast(result.message || 'Remittance created', 'success', 'Created');
+            closeCreateRemittanceModal();
+            if (document.getElementById('currentRiderId').value) loadRiderStats(document.getElementById('currentRiderId').value);
+            loadDeliveryRiders();
+        } else {
+            showError(result.message || 'Failed to create remittance', 'Error');
+        }
+    } catch (err) {
+        console.error('Error creating remittance:', err);
+        showError('An error occurred while creating the remittance', 'Error');
+    }
 }
 
 if (document.readyState === 'loading') {

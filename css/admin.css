@@ -1047,6 +1047,28 @@ body {
     box-shadow: var(--shadow-sm);
     transition: var(--transition);
 }
+/* special styling for money stats */
+.stat-card-small.money {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(34, 197, 94, 0.02));
+    border: 1px solid rgba(16, 185, 129, 0.06);
+}
+.stat-card-small.money .stat-icon-small {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+.stat-card-small.money .stat-value-small {
+    color: var(--success);
+}
+
+/* Responsive remittances in admin rider modal */
+.remittances-admin-section .data-table thead { display: table-header-group; }
+.remittances-admin-section .data-table tbody td { padding: 12px 10px; }
+@media (max-width: 760px) {
+    .remittances-admin-section .data-table thead { display: none; }
+    .remittances-admin-section .data-table tbody td { display: block; width: 100%; box-sizing: border-box; }
+    .remittances-admin-section .data-table tbody tr { display: block; margin-bottom: 12px; border-radius: 8px; overflow: hidden; background: var(--card-bg); box-shadow: var(--shadow-sm); }
+    .remittances-admin-section .data-table tbody td { padding: 12px; border-top: none; }
+}
 
 .stat-card-small:hover {
     box-shadow: var(--shadow-md);

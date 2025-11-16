@@ -5,11 +5,22 @@ let lastLocationUpdate = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadDeliveries();
+    loadRemittances();
     loadProfileInfo();
     setupEventListeners();
 
     tryAutomaticLocationTracking();
 });
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 function setupEventListeners() {
     document.getElementById('setLocationBtn').addEventListener('click', openSetLocationModal);
@@ -17,6 +28,7 @@ function setupEventListeners() {
     document.getElementById('refreshBtn').addEventListener('click', () => {
         document.getElementById('refreshBtn').classList.add('spinning');
         loadDeliveries();
+        loadRemittances();
         setTimeout(() => {
             document.getElementById('refreshBtn').classList.remove('spinning');
         }, 500);
@@ -1168,5 +1180,92 @@ async function submitProofOfDelivery() {
         showError('An error occurred: ' + error.message);
         document.getElementById('submitProofBtn').disabled = false;
         document.getElementById('submitProofBtn').innerHTML = '<i class="fas fa-check"></i> Submit Proof';
+    }
+}
+
+async function loadRemittances(filter = 'all') {
+    try {
+        const response = await fetch(`api/get_my_remittances.php?filter=${filter}`);
+        const result = await response.json();
+        if (!result.success) {
+            console.error('Failed to load remittances:', result.message);
+            document.getElementById('remittancesTableBody').innerHTML = '<tr><td colspan="4" class="text-center">Failed to load remittances</td></tr>';
+            return;
+        }
+
+        const collectedEl = document.getElementById('collectedToday');
+        if (collectedEl) {
+            collectedEl.textContent = '₱' + parseFloat(result.collected_today || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        }
+        const unremittedEl = document.getElementById('unremittedTotal');
+        if (unremittedEl) {
+            unremittedEl.textContent = '₱' + parseFloat(result.unremitted_total || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        }
+        const remittedTotalEl = document.getElementById('remittedTotal');
+        if (remittedTotalEl) {
+            remittedTotalEl.textContent = '₱' + parseFloat(result.unremitted_total || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        }
+
+        const body = document.getElementById('remittancesTableBody');
+        if (!body) return;
+
+        const remittances = result.remittances || [];
+        if (remittances.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" class="text-center">No remittances found</td></tr>';
+            return;
+        }
+
+        body.innerHTML = remittances.map(r => {
+            const date = r.TransactionDate ? new Date(r.TransactionDate).toLocaleDateString() : '-';
+            const statusLower = (r.Status || '').toLowerCase();
+            const statusBadgeClass = statusLower === 'paid' ? 'paid' : statusLower === 'pending' ? 'pending' : statusLower === 'cancelled' ? 'cancelled' : 'default';
+            return `
+                <tr>
+                    <td>#${escapeHtml(r.RemittanceID)}</td>
+                    <td>₱${escapeHtml(parseFloat(r.Amount).toLocaleString('en-PH', { minimumFractionDigits: 2 }))}</td>
+                    <td>${escapeHtml(date)}</td>
+                    <td><span class="badge-remittance ${statusBadgeClass}">${escapeHtml(r.Status || '-')}</span></td>
+                </tr>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error loading remittances:', error);
+        const body = document.getElementById('remittancesTableBody');
+        if (body) body.innerHTML = '<tr><td colspan="4" class="text-center">Failed to load remittances</td></tr>';
+    }
+}
+
+async function openRemittanceOrdersModal(remittanceId) {
+    try {
+        const modalId = 'remittanceOrdersModal';
+        const modal = document.getElementById(modalId);
+        const tbody = document.getElementById('remittanceOrdersTableBody');
+        if (!modal || !tbody) return;
+        tbody.innerHTML = '<tr><td colspan="4" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading orders...</td></tr>';
+        modal.classList.add('active');
+
+        const response = await fetch(`api/get_remittance_orders.php?remittance_id=${remittanceId}`);
+        const result = await response.json();
+        if (!result.success) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: #f44336;">${result.message || 'Failed to load orders'}</td></tr>`;
+            return;
+        }
+        const orders = result.orders || [];
+        if (orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No orders found for this remittance</td></tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map(o => `
+            <tr>
+                <td>#${String(o.OrderID).padStart(6, '0')}</td>
+                <td>${escapeHtml(o.CustomerName || '')}</td>
+                <td>₱${parseFloat((o.TotalAmount || 0) - (o.Discount || 0)).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+                <td>${o.LastUpdated ? new Date(o.LastUpdated).toLocaleDateString() : '-'}</td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error('Error loading remittance orders:', err);
+        const tbody = document.getElementById('remittanceOrdersTableBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: #f44336;">Failed to load orders</td></tr>';
     }
 }

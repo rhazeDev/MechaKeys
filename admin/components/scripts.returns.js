@@ -109,14 +109,6 @@ function renderReturnsTable(returns) {
                     <button class="btn-small btn-info" onclick="viewReturnDetails(${ret.return_id})">
                         <i class="fas fa-eye"></i> View
                     </button>
-                    ${ret.status === 'Pending' ? `
-                        <button class="btn-small btn-success" onclick="openAssignRiderModal(${ret.return_id})">
-                            <i class="fas fa-check"></i> Approve
-                        </button>
-                        <button class="btn-small btn-danger" onclick="openRejectModal(${ret.return_id})">
-                            <i class="fas fa-ban"></i> Reject
-                        </button>
-                    ` : ''}
                 </td>
             </tr>
         `;
@@ -243,66 +235,69 @@ function renderReturnDetailsModal(ret) {
         </div>
     `;
 
-    document.getElementById('returnDetailsContent').innerHTML = html;
+    let actionsHtml = '';
+    if (ret.status === 'Pending') {
+        actionsHtml = `
+            <div style="margin-top:18px; display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn btn-secondary btn-modal-close" onclick="closeReturnDetailsModal()"><i class="fas fa-times"></i> Close</button>
+                <button class="btn btn-danger btn-reject" onclick="openRejectModal(${ret.return_id})"><i class="fas fa-ban"></i> Reject</button>
+                <button class="btn btn-success" onclick="approveReturn(${ret.return_id}, ${ret.order_id})"><i class="fas fa-check-circle"></i> Approve</button>
+            </div>
+        `;
+    } else {
+        actionsHtml = `
+            <div style="margin-top:18px; display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn btn-secondary btn-modal-close" onclick="closeReturnDetailsModal()"><i class="fas fa-times"></i> Close</button>
+            </div>
+        `;
+    }
+
+    document.getElementById('returnDetailsContent').innerHTML = html + actionsHtml;
 }
 
 function closeReturnDetailsModal() {
     document.getElementById('returnDetailsModal').style.display = 'none';
 }
 
-function openAssignRiderModal(returnId) {
-    document.getElementById('assignReturnId').value = returnId;
+function approveReturn(returnId, orderId) {
+    showCustomConfirm('Are you sure to accept return request?', function () {
+        const formData = new FormData();
+        formData.append('return_id', returnId);
+        formData.append('action', 'approve');
 
-    const riderSelect = document.getElementById('returnRiderSelect');
-    riderSelect.innerHTML = '<option value="">-- Select a delivery rider --</option>';
-
-    allDeliveryRiders.forEach(rider => {
-        const option = document.createElement('option');
-        option.value = rider.id;
-        option.textContent = `${rider.name} (${rider.contact})`;
-        riderSelect.appendChild(option);
+        fetch('api/approve_return.php', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    closeReturnDetailsModal();
+                    loadReturns(currentReturnFilter);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to process request');
+            });
     });
+}
 
-    document.getElementById('assignReturnRiderModal').style.display = 'flex';
+function confirmAssignReturnRider() {
+    const returnIdEl = document.getElementById('assignReturnId');
+    const returnId = returnIdEl ? parseInt(returnIdEl.value) : null;
+    if (!returnId) {
+        alert('Missing return information');
+        return;
+    }
+    approveReturn(returnId);
 }
 
 function closeAssignRiderModal() {
     document.getElementById('assignReturnRiderModal').style.display = 'none';
-}
-
-function confirmAssignReturnRider() {
-    const returnId = parseInt(document.getElementById('assignReturnId').value);
-    const riderId = parseInt(document.getElementById('returnRiderSelect').value);
-
-    if (riderId <= 0) {
-        alert('Please select a delivery rider');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('return_id', returnId);
-    formData.append('action', 'approve');
-    formData.append('rider_id', riderId);
-
-    fetch('api/approve_return.php', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                closeAssignRiderModal();
-                closeReturnDetailsModal();
-                loadReturns(currentReturnFilter);
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to process request');
-        });
 }
 
 function openRejectModal(returnId) {
@@ -351,7 +346,8 @@ function confirmRejectReturn() {
 }
 
 function escapeHtml(text) {
-    if (!text) return '';
+    if (text === null || text === undefined) return '';
+    text = String(text);
     const map = {
         '&': '&amp;',
         '<': '&lt;',
@@ -359,7 +355,7 @@ function escapeHtml(text) {
         '"': '&quot;',
         "'": '&#039;'
     };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    return text.replace(/[&<>\"']/g, m => map[m]);
 }
 
 window.onclick = function (event) {

@@ -17,7 +17,7 @@
 
         <!-- Riders Statistics -->
         <div class="stats-grid" style="margin-bottom: 20px;">
-            <div class="stat-card-small">
+            <div class="stat-card-small money">
                 <div class="stat-icon-small success">
                     <i class="fas fa-users"></i>
                 </div>
@@ -26,7 +26,7 @@
                     <div class="stat-label-small">Total Riders</div>
                 </div>
             </div>
-            <div class="stat-card-small">
+            <div class="stat-card-small money">
                 <div class="stat-icon-small primary">
                     <i class="fas fa-user-check"></i>
                 </div>
@@ -51,6 +51,24 @@
                 <div>
                     <div class="stat-value-small" id="completedDeliveriesCount">0</div>
                     <div class="stat-label-small">Completed Today</div>
+                </div>
+            </div>
+            <div class="stat-card-small">
+                <div class="stat-icon-small success">
+                    <i class="fas fa-peso-sign"></i>
+                </div>
+                <div>
+                    <div class="stat-value-small" id="totalCollectedToday">₱0.00</div>
+                    <div class="stat-label-small">Collected Today</div>
+                </div>
+            </div>
+            <div class="stat-card-small">
+                <div class="stat-icon-small success">
+                    <i class="fas fa-peso-sign"></i>
+                </div>
+                <div>
+                    <div class="stat-value-small" id="totalUnremittedAmount">₱0.00</div>
+                    <div class="stat-label-small">Total Unremitted</div>
                 </div>
             </div>
         </div>
@@ -124,6 +142,15 @@
                                         <div class="stat-label-small">In Progress</div>
                                     </div>
                                 </div>
+                                <div class="stat-card-small">
+                                    <div class="stat-icon-small success">
+                                        <i class="fas fa-peso-sign"></i>
+                                    </div>
+                                    <div>
+                                        <div class="stat-value-small" id="statsUnremitted">₱0.00</div>
+                                        <div class="stat-label-small">Unremitted</div>
+                                    </div>
+                                </div>
                             </div>
 
                             <h4 style="margin-bottom: 15px;"><i class="fas fa-list"></i> Recent Deliveries</h4>
@@ -148,9 +175,37 @@
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            <h4 style="margin-top: 25px; margin-bottom: 15px;"><i class="fas fa-money-bill-wave"></i> Remittances</h4>
+                            <div class="table-container remittances-admin-section" style="max-height: 300px; overflow-y: auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Remittance ID</th>
+                                            <th>Amount</th>
+                                            <th>Period</th>
+                                            <th>Date</th>
+                                            <th>Method</th>
+                                            <th>Reference</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="riderRemittancesBody">
+                                        <tr>
+                                            <td colspan="8" style="text-align: center; padding: 20px;">
+                                                <i class="fas fa-spinner fa-spin"></i> Loading...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" onclick="closeRiderStatsModal()">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="openCreateRemittanceModal(document.getElementById('currentRiderId').value)">
+                                    <i class="fas fa-plus"></i> Create Remittance
+                                </button>
                         </div>
                     </div>
                 </div>
@@ -165,6 +220,7 @@
                         <th>Email</th>
                         <th>Contact</th>
                         <th>Address</th>
+                        <th>Total Unremitted</th>
                         <th>Status</th>
                         <th>Active Deliveries</th>
                         <th>Actions</th>
@@ -173,7 +229,7 @@
  
                 <tbody id="ridersTableBody">
                     <tr>
-                        <td colspan="8" class="text-center">
+                        <td colspan="9" class="text-center">
                             <i class="fas fa-spinner fa-spin"></i> Loading riders...
                         </td>
                     </tr>
@@ -318,3 +374,76 @@
         </div>
     </div>
 </div>
+
+        <!-- Create Remittance Modal -->
+        <div id="createRemittanceModal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3><i class="fas fa-peso-sign"></i> Create Remittance</h3>
+                    <button class="modal-close" onclick="closeCreateRemittanceModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="createRemittanceForm" onsubmit="submitCreateRemittance(event)">
+                        <input type="hidden" id="createRiderId" name="rider_id">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Period</label>
+                                <select id="remitPeriod" name="period" class="form-select" onchange="loadRemittanceOrders()">
+                                    <option value="today">Today</option>
+                                    <option value="month">This Month</option>
+                                    <option value="all">All</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div id="customPeriodFields" style="display: none;">
+                                <div class="form-group">
+                                    <label>Start Date</label>
+                                    <input type="date" id="remitStart" name="period_start" class="form-input" onchange="loadRemittanceOrders()">
+                                </div>
+                                <div class="form-group">
+                                    <label>End Date</label>
+                                    <input type="date" id="remitEnd" name="period_end" class="form-input" onchange="loadRemittanceOrders()">
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Orders (Select which orders to include)</label>
+                                <div class="table-container" style="max-height: 220px; overflow-y: auto;">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 30px;"></th>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="createRemittanceOrdersBody">
+                                            <tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading orders...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Amount</label>
+                                <input type="text" id="createRemittanceAmount" name="amount" class="form-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Reference</label>
+                                <input type="text" id="createRemittanceReference" name="reference" class="form-input" placeholder="Optional reference">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Notes</label>
+                                <textarea id="createRemittanceNotes" name="notes" class="form-textarea" rows="3" placeholder="Notes or audit message (optional)"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeCreateRemittanceModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Remittance</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>

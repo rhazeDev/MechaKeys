@@ -93,6 +93,25 @@ $rider_query->close();
                     <span class="stat-value" id="deliveredCount">0</span>
                 </div>
             </div>
+            
+            <div class="stat-card money">
+                <div class="stat-icon success">
+                    <i class="fas fa-peso-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Collected Today</span>
+                    <span class="stat-value" id="collectedToday">₱0.00</span>
+                </div>
+            </div>
+            <div class="stat-card money">
+                <div class="stat-icon success">
+                    <i class="fas fa-peso-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Unremitted Cash</span>
+                    <span class="stat-value" id="unremittedTotal">₱0.00</span>
+                </div>
+            </div>
         </section>
 
         <!-- Filters -->
@@ -112,6 +131,28 @@ $rider_query->close();
         <section class="deliveries-section">
             <div id="deliveriesList" class="deliveries-grid">
                 <!-- Deliveries will be loaded here -->
+            </div>
+        </section>
+
+        <!-- Remittances List -->
+        <section class="remittances-section" style="margin-top: 20px;">
+            <h3>Remittances</h3>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Remittance ID</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="remittancesTableBody">
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 20px;">Loading remittances...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
     </div>
@@ -163,6 +204,38 @@ $rider_query->close();
                 </div>
             </div>
         </div>
+
+                    <!-- Remittance Orders Modal -->
+                    <div id="remittanceOrdersModal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Remittance Orders</h2>
+                                <button class="modal-close" onclick="closeModal('remittanceOrdersModal')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div id="remittanceOrdersBody" class="modal-body">
+                                <div class="table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="remittanceOrdersTableBody">
+                                            <tr><td colspan="4" style="text-align:center">No orders to display</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" onclick="closeModal('remittanceOrdersModal')">Close</button>
+                            </div>
+                        </div>
+                    </div>
     </div>
 
     <!-- Profile Modal -->

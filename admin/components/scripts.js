@@ -52,7 +52,10 @@ function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(section => {
         section.classList.remove('active');
     });
-    document.getElementById(sectionId).classList.add('active');
+    const targetSection = document.getElementById(sectionId);
+    if (!targetSection) return;
+    targetSection.classList.add('active');
+
 
     document.querySelectorAll('.nav-item').forEach(nav => {
         if (nav.dataset.section === sectionId) {
@@ -69,11 +72,16 @@ function showSection(sectionId) {
         loadProducts();
     } else if (sectionId === 'inventory') {
         loadInventory();
+    } else if (sectionId === 'returns') {
+        if (typeof loadReturns === 'function') loadReturns();
     } else if (sectionId === 'orders') {
         loadOrders();
     } else if (sectionId === 'delivery-riders') {
         loadDeliveryRiders();
     }
+
+    const sectionEl = document.getElementById(sectionId);
+    if (!sectionEl) return;
 }
 
 document.addEventListener('change', function (e) {
@@ -144,26 +152,29 @@ document.addEventListener('change', function (e) {
     }
 });
 
-document.getElementById('productImages').addEventListener('change', function (e) {
-    const preview = document.getElementById('imagePreview');
-    preview.innerHTML = '';
+const productImagesEl = document.getElementById('productImages');
+if (productImagesEl) {
+    productImagesEl.addEventListener('change', function (e) {
+        const preview = document.getElementById('imagePreview');
+        if (preview) preview.innerHTML = '';
 
-    Array.from(this.files).forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const div = document.createElement('div');
-            div.className = 'preview-item';
-            div.innerHTML = `
-                <img src="${e.target.result}" alt="Preview">
-                <button type="button" class="preview-remove" onclick="removeImage(${index})">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            preview.appendChild(div);
-        };
-        reader.readAsDataURL(file);
+        Array.from(this.files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="preview-remove" onclick="removeImage(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                if (preview) preview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
     });
-});
+}
 
 function removeImage(index) {
     const input = document.getElementById('productImages');
@@ -225,44 +236,46 @@ function addVariation() {
     variationCount++;
 }
 
-document.getElementById('addProductForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
+const addProductFormEl = document.getElementById('addProductForm');
+if (addProductFormEl) {
+    addProductFormEl.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
-    const formData = new FormData(this);
+        const formData = new FormData(this);
 
-    const layoutSelects = document.querySelectorAll('.layout-select');
-    layoutSelects.forEach((select, index) => {
-        if (select.value === 'custom') {
-            const customLayoutInput = document.querySelector(`input[name="variations[${index}][custom_layout]"]`);
-            if (customLayoutInput && customLayoutInput.value) {
-                formData.set(`variations[${index}][layout]`, customLayoutInput.value);
+        const layoutSelects = document.querySelectorAll('.layout-select');
+        layoutSelects.forEach((select, index) => {
+            if (select.value === 'custom') {
+                const customLayoutInput = document.querySelector(`input[name="variations[${index}][custom_layout]"]`);
+                if (customLayoutInput && customLayoutInput.value) {
+                    formData.set(`variations[${index}][layout]`, customLayoutInput.value);
+                }
             }
-        }
-    });
-
-    const messageDiv = document.getElementById('add-product-message');
-
-    try {
-        const response = await fetch('api/add_product.php', {
-            method: 'POST',
-            body: formData
         });
 
-        const result = await response.json();
+        const messageDiv = document.getElementById('add-product-message');
 
-        if (result.success) {
-            messageDiv.innerHTML = `
+        try {
+            const response = await fetch('api/add_product.php', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                messageDiv.innerHTML = `
                 <div class="alert success">
                     <i class="fas fa-check-circle"></i>
                     ${result.message}
                 </div>
             `;
-            this.reset();
-            document.getElementById('imagePreview').innerHTML = '';
-            variationCount = 1;
+                this.reset();
+                document.getElementById('imagePreview').innerHTML = '';
+                variationCount = 1;
 
-            const container = document.getElementById('variationsContainer');
-            container.innerHTML = `
+                const container = document.getElementById('variationsContainer');
+                container.innerHTML = `
                 <div class="variation-item">
                     <div class="form-group">
                         <label class="form-label">Layout <span class="required">*</span></label>
@@ -301,29 +314,30 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
                 </div>
             `;
 
-            setTimeout(() => {
-                showSection('dashboard');
-                messageDiv.innerHTML = '';
-            }, 2000);
-        } else {
-            messageDiv.innerHTML = `
+                setTimeout(() => {
+                    showSection('dashboard');
+                    messageDiv.innerHTML = '';
+                }, 2000);
+            } else {
+                messageDiv.innerHTML = `
                 <div class="alert error">
                     <i class="fas fa-exclamation-circle"></i>
                     ${result.message}
                 </div>
             `;
-        }
-    } catch (error) {
-        messageDiv.innerHTML = `
+            }
+        } catch (error) {
+            messageDiv.innerHTML = `
             <div class="alert error">
                 <i class="fas fa-exclamation-circle"></i>
                 An error occurred. Please try again.
             </div>
         `;
-    }
+        }
 
-    window.scrollTo(0, 0);
-});
+        window.scrollTo(0, 0);
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     showSection('dashboard');

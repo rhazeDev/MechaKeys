@@ -2,6 +2,10 @@ let editVariationCounter = 0;
 
 async function loadProducts() {
     const container = document.getElementById('products-list');
+    if (!container) {
+        console.error('loadProducts: #products-list container not found');
+        return;
+    }
     container.innerHTML = '<div class="text-center">Loading...</div>';
 
     try {
@@ -254,4 +258,11 @@ async function saveProductEdit() {
             </div>
         `;
     }
+}
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
 }

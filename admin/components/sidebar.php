@@ -16,6 +16,10 @@
                 <i class="fas fa-shopping-cart"></i>
                 <span>Orders</span>
             </a>
+            <a href="#" class="nav-item" data-section="returns">
+                <i class="fas fa-undo"></i>
+                <span>Returns</span>
+            </a>
             <a href="#" class="nav-item" data-section="products">
                 <i class="fas fa-box"></i>
                 <span>Products</span>

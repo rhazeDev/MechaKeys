@@ -24,10 +24,7 @@ if ($return_id <= 0 || !in_array($action, ['approve', 'reject'])) {
     exit;
 }
 
-if ($action === 'approve' && $rider_id <= 0) {
-    echo json_encode(['success' => false, 'message' => 'Rider selection is required for approval']);
-    exit;
-}
+
 
 if ($action === 'reject' && empty($admin_message)) {
     echo json_encode(['success' => false, 'message' => 'Rejection reason is required']);
@@ -37,9 +34,9 @@ if ($action === 'reject' && empty($admin_message)) {
 $conn->begin_transaction();
 
 try {
-    $return_sql = "SELECT r.*, o.CustomerID, o.TotalAmount FROM returns r 
-                   INNER JOIN orders o ON r.OrderID = o.OrderID 
-                   WHERE r.ReturnID = ?";
+    $return_sql = "SELECT r.*, o.CustomerID, o.TotalAmount, o.TrackingID as OrderTrackingID FROM returns r 
+                       INNER JOIN orders o ON r.OrderID = o.OrderID 
+                       WHERE r.ReturnID = ?";
     $return_stmt = $conn->prepare($return_sql);
     $return_stmt->bind_param("i", $return_id);
     $return_stmt->execute();
@@ -60,22 +57,41 @@ try {
     $order_id = $return_data['OrderID'];
     $refund_amount = $return_data['TotalAmount'];
 
-    if ($action === 'approve') {
-        $rider_check_sql = "SELECT ID FROM users WHERE ID = ? AND Role = 'delivery'";
-        $rider_check_stmt = $conn->prepare($rider_check_sql);
-        $rider_check_stmt->bind_param("i", $rider_id);
-        $rider_check_stmt->execute();
-        $rider_check_result = $rider_check_stmt->get_result();
 
-        if ($rider_check_result->num_rows === 0) {
-            throw new Exception('Invalid rider selected');
+    if ($action === 'approve') {
+        $order_tracking_id = isset($return_data['OrderTrackingID']) ? intval($return_data['OrderTrackingID']) : 0;
+        $assign_rider_id = 0;
+
+        if ($order_tracking_id > 0) {
+            $rider_sql = "SELECT DeliveryPersonID FROM trackings WHERE TrackingID = ? LIMIT 1";
+            $rider_stmt = $conn->prepare($rider_sql);
+            $rider_stmt->bind_param("i", $order_tracking_id);
+            $rider_stmt->execute();
+            $rider_result = $rider_stmt->get_result();
+            if ($rider_result && $rider_result->num_rows > 0) {
+                $row = $rider_result->fetch_assoc();
+                $assign_rider_id = intval($row['DeliveryPersonID']);
+            }
+            $rider_stmt->close();
         }
-        $rider_check_stmt->close();
+
+        if ($assign_rider_id > 0) {
+            $rider_check_sql = "SELECT ID FROM users WHERE ID = ? AND Role = 'delivery'";
+            $rider_check_stmt = $conn->prepare($rider_check_sql);
+            $rider_check_stmt->bind_param("i", $assign_rider_id);
+            $rider_check_stmt->execute();
+            $rider_check_result = $rider_check_stmt->get_result();
+
+            if ($rider_check_result->num_rows === 0) {
+                $assign_rider_id = 0;
+            }
+            $rider_check_stmt->close();
+        }
 
         $create_tracking_sql = "INSERT INTO trackings (DeliveryPersonID, DeliveryStatus, LastUpdated) 
                                VALUES (?, 'Ready to Deliver', NOW())";
         $create_tracking_stmt = $conn->prepare($create_tracking_sql);
-        $create_tracking_stmt->bind_param("i", $rider_id);
+        $create_tracking_stmt->bind_param("i", $assign_rider_id);
 
         if (!$create_tracking_stmt->execute()) {
             throw new Exception('Failed to create return tracking');

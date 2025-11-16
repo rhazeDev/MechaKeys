@@ -73,6 +73,7 @@ $in_progress_stmt->close();
 $deliveries_query = "SELECT 
                         o.OrderID,
                         o.TotalAmount,
+                        o.Discount,
                         u.FullName as CustomerName,
                         t.DeliveryStatus,
                         t.LastUpdated,
@@ -99,6 +100,74 @@ while ($row = $deliveries_result->fetch_assoc()) {
 }
 $deliveries_stmt->close();
 
+$remittances = [];
+$remitted_total = 0.00;
+$collected_total = 0.00;
+$unremitted_total = 0.00;
+$rem_query = "SELECT RemittanceID, Amount, PeriodStart, PeriodEnd, TransactionDate, PaymentMethod, Reference, Status, Notes FROM rider_remittances WHERE RiderID = ?";
+if ($filter === 'today') {
+    $rem_query .= ' AND DATE(TransactionDate) = CURDATE()';
+} elseif ($filter === 'month') {
+    $rem_query .= ' AND YEAR(TransactionDate) = YEAR(CURDATE()) AND MONTH(TransactionDate) = MONTH(CURDATE())';
+}
+$rem_stmt = $conn->prepare($rem_query);
+if (!empty($params)) {
+    $rem_stmt->bind_param($types, ...$params);
+}
+$rem_stmt->execute();
+$rem_result = $rem_stmt->get_result();
+$remittances_sanitized = [];
+while ($row = $rem_result->fetch_assoc()) {
+    if (empty($row['PaymentMethod'])) {
+        $row['PaymentMethod'] = 'Cash';
+    }
+    $remittances_sanitized[] = $row;
+    if (isset($row['Status']) && $row['Status'] === 'Paid') {
+        $remitted_total += floatval($row['Amount']);
+    }
+}
+$remittances = $remittances_sanitized;
+$rem_stmt->close();
+
+$collected_sql = "SELECT COALESCE(SUM(p.Amount), 0) as total FROM payments p
+    INNER JOIN orders o ON p.OrderID = o.OrderID
+    INNER JOIN trackings t ON o.TrackingID = t.TrackingID
+    WHERE p.Status = 'Paid' AND t.DeliveryPersonID = ?" . $dateFilter;
+$col_stmt = $conn->prepare($collected_sql);
+$col_stmt->bind_param($types, ...$params);
+$col_stmt->execute();
+$col_res = $col_stmt->get_result()->fetch_assoc();
+$collected_total = floatval($col_res['total']);
+$col_stmt->close();
+if ($collected_total <= 0) {
+    $fallback_collected_sql = "SELECT COALESCE(SUM(o.TotalAmount - o.Discount), 0) as total FROM orders o
+        INNER JOIN trackings t ON o.TrackingID = t.TrackingID
+        WHERE t.DeliveryPersonID = ? AND t.DeliveryStatus = 'Delivered'" . $dateFilter;
+    $fb_stmt = $conn->prepare($fallback_collected_sql);
+    $fb_stmt->bind_param($types, ...$params);
+    $fb_stmt->execute();
+    $fb_res = $fb_stmt->get_result()->fetch_assoc();
+    $collected_total = floatval($fb_res['total']);
+    $fb_stmt->close();
+}
+
+$paid_remittances_sql = "SELECT COALESCE(SUM(Amount), 0) as total FROM rider_remittances WHERE RiderID = ? AND Status = 'Paid'";
+if ($filter === 'today') {
+    $paid_remittances_sql .= ' AND DATE(TransactionDate) = CURDATE()';
+} elseif ($filter === 'month') {
+    $paid_remittances_sql .= ' AND YEAR(TransactionDate) = YEAR(CURDATE()) AND MONTH(TransactionDate) = MONTH(CURDATE())';
+}
+$paid_stmt = $conn->prepare($paid_remittances_sql);
+$paid_stmt->bind_param($types, ...$params);
+$paid_stmt->execute();
+$paid_res = $paid_stmt->get_result()->fetch_assoc();
+$paid_remitted = floatval($paid_res['total']);
+$paid_stmt->close();
+
+$unremitted_total = $collected_total - $paid_remitted;
+if ($unremitted_total < 0)
+    $unremitted_total = 0.00;
+
 echo json_encode([
     'success' => true,
     'stats' => [
@@ -106,8 +175,13 @@ echo json_encode([
         'successful' => $successful_deliveries,
         'failed' => $failed_deliveries,
         'in_progress' => $in_progress_deliveries
+        ,
+        'remitted_total' => number_format($remitted_total, 2, '.', ''),
+        'unremitted_total' => number_format($unremitted_total, 2, '.', '')
     ],
     'deliveries' => $deliveries
+    ,
+    'remittances' => $remittances
 ]);
 
 $conn->close();

@@ -1,5 +1,9 @@
 async function loadInventory() {
     const container = document.getElementById('inventory-list');
+    if (!container) {
+        console.error('loadInventory: #inventory-list container not found');
+        return;
+    }
     container.innerHTML = '<div class="text-center">Loading...</div>';
 
     try {
@@ -52,6 +56,8 @@ async function loadInventory() {
                     </table>
                 </div>
             `;
+        } else {
+            container.innerHTML = '<div class="alert error">Failed to load inventory</div>';
         }
     } catch (error) {
         container.innerHTML = '<div class="alert error">Failed to load inventory</div>';
@@ -105,6 +111,7 @@ async function updateStock() {
                     ${result.message}
                 </div>
             `;
+            const sectionEl = document.getElementById('inventory');
         }
     } catch (error) {
         messageDiv.innerHTML = `
@@ -114,4 +121,11 @@ async function updateStock() {
             </div>
         `;
     }
+}
+
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
 }

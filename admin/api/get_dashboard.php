@@ -43,7 +43,7 @@ while ($row = $order_status_result->fetch_assoc()) {
     $order_status_data[] = $row;
 }
 
-$revenue_query = "SELECT DATE(o.PlaceOrdered) as date, SUM(o.TotalAmount) as revenue
+ $revenue_query = "SELECT DATE(o.PlaceOrdered) as date, SUM(o.TotalAmount - o.Discount) as revenue
                  FROM orders o 
                  JOIN trackings t ON o.TrackingID = t.TrackingID
                  WHERE t.DeliveryStatus = 'Delivered' AND o.PlaceOrdered >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
