@@ -183,17 +183,14 @@
                                         <tr>
                                             <th>Remittance ID</th>
                                             <th>Amount</th>
-                                            <th>Period</th>
                                             <th>Date</th>
-                                            <th>Method</th>
-                                            <th>Reference</th>
                                             <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="riderRemittancesBody">
                                         <tr>
-                                            <td colspan="8" style="text-align: center; padding: 20px;">
+                                            <td colspan="5" style="text-align: center; padding: 20px;">
                                                 <i class="fas fa-spinner fa-spin"></i> Loading...
                                             </td>
                                         </tr>

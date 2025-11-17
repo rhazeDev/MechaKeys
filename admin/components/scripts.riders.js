@@ -328,16 +328,13 @@ async function loadRiderStats(riderId) {
         } else {
             const remittances = result.remittances || [];
             if (remittances.length === 0) {
-                remTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No remittances found</td></tr>';
+                remTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No remittances found</td></tr>';
             } else {
                 remTableBody.innerHTML = remittances.map(r => `
                         <tr>
                             <td>#${r.RemittanceID}</td>
                             <td>₱${parseFloat(r.Amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
-                            <td>${r.PeriodStart ? r.PeriodStart + (r.PeriodEnd ? ' - ' + r.PeriodEnd : '') : '-'}</td>
                             <td>${new Date(r.TransactionDate).toLocaleDateString()}</td>
-                            <td>${r.PaymentMethod || 'Cash'}</td>
-                            <td>${r.Reference || '-'}</td>
                             <td>${r.Status ? `<span class="badge ${r.Status === 'Paid' ? 'success' : r.Status === 'Pending' ? 'warning' : 'error'}">${r.Status}</span>` : '-'}</td>
                             <td onclick="event.stopPropagation()">
                                 ${r.Status === 'Pending' ? `
