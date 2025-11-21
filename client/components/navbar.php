@@ -29,13 +29,18 @@ if ($isLoggedIn) {
             <img src="images/logo.png" width="250px" height="40px">
         </a>
 
-        <div class="navbar-search" style="display:flex;align-items:center;gap:8px;">
+        <div class="navbar-search" style="display:flex;align-items:center;gap:8px;position:relative;">
             <input id="site-search" type="text" class="search-input" placeholder="Search keyboards, brands..."
-                value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>"
+                autocomplete="off">
             <button id="site-search-btn" class="btn-primary" type="button" style="padding:10px 12px;font-size:14px;"
                 aria-label="Search">
                 <i class="fas fa-search" aria-hidden="true"></i>
             </button>
+            <div id="search-suggestions" class="search-suggestions"
+                style="display:none; position:absolute; left:0; right:0; top:calc(100% + 6px); background:#fff; border:1px solid #ddd; z-index:1000; max-height:360px; overflow:auto; box-shadow:0 6px 12px rgba(0,0,0,0.08);">
+                <!-- populated dynamically -->
+            </div>
         </div>
 
         <div class="navbar-actions">
@@ -130,6 +135,7 @@ if ($isLoggedIn) {
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const searchInput = document.getElementById('site-search');
+        const suggestionsBox = document.getElementById('search-suggestions');
         if (!searchInput) return;
 
         function navigateWithSearch(q) {
@@ -142,6 +148,7 @@ if ($isLoggedIn) {
             }
             const target = window.location.pathname.split('/').pop() || 'index.php';
             const qs = params.toString();
+            clearSuggestions();
             window.location.href = target + (qs ? ('?' + qs) : '');
         }
 
@@ -157,5 +164,106 @@ if ($isLoggedIn) {
                 navigateWithSearch(searchInput.value.trim());
             });
         }
+
+        let debounceTimer = null;
+        function debounce(func, wait) {
+            return function (...args) {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        function clearSuggestions() {
+            if (!suggestionsBox) return;
+            suggestionsBox.style.display = 'none';
+            suggestionsBox.innerHTML = '';
+        }
+
+        function showSuggestions(items) {
+            if (!suggestionsBox) return;
+            suggestionsBox.innerHTML = '';
+            if (!items || items.length === 0) {
+                clearSuggestions();
+                return;
+            }
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'search-suggestion-item';
+                div.style.padding = '10px';
+                div.style.display = 'flex';
+                div.style.gap = '10px';
+                div.style.alignItems = 'center';
+                div.style.cursor = 'pointer';
+                div.style.borderBottom = '1px solid #f1f1f1';
+                div.innerHTML = `<div style="width:48px;height:48px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f7f7f7;border-radius:6px;">
+                        ${item.image ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : '<span style="font-size:18px">⌨️</span>'}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.name)}</div>
+                        <div style="font-size:12px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.specs)} • ${escapeHtml(item.price)}</div>
+                    </div>`;
+                div.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    window.location.href = 'product.php?id=' + item.id;
+                });
+                suggestionsBox.appendChild(div);
+            });
+            suggestionsBox.style.display = 'block';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/[&<>"'`]/g, function (s) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;',
+                    '`': '&#96;'
+                })[s];
+            });
+        }
+
+        async function fetchSuggestions(query) {
+            if (!query || query.length < 2) {
+                clearSuggestions();
+                return;
+            }
+            try {
+                let url = new URL('api/get_products_clean.php', window.location.href);
+                const params = url.searchParams;
+                params.set('search', query);
+                url.search = params.toString();
+                const res = await fetch(url.toString());
+                if (!res.ok) {
+                    clearSuggestions();
+                    return;
+                }
+                const data = await res.json();
+
+                if (data.success) {
+                    showSuggestions(data.products.slice(0, 6));
+                } else {
+                    clearSuggestions();
+                }
+            } catch (err) {
+                clearSuggestions();
+            }
+        }
+
+        const debouncedFetch = debounce(function () {
+            fetchSuggestions(searchInput.value.trim());
+        }, 300);
+
+        searchInput.addEventListener('input', function () {
+            debouncedFetch();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!suggestionsBox.contains(e.target) && e.target !== searchInput) {
+                clearSuggestions();
+            }
+        });
     });
 </script>

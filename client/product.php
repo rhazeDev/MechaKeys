@@ -193,6 +193,13 @@ $isLoggedIn = isset($_SESSION['user_id']);
                         $layouts = array_unique(array_column($variations, 'Layout'));
                         $switches = array_unique(array_column($variations, 'SwitchType'));
                         $colors = array_unique(array_column($variations, 'Color'));
+                        $blankCats = ['switches', 'keycaps', 'accessories'];
+                        $prodCat = strtolower($product['Category']);
+                        if (in_array($prodCat, $blankCats)) {
+                            $layouts = array_values(array_filter($layouts, function($v) { return $v !== null && $v !== '' && strtoupper($v) !== 'N/A'; }));
+                            $switches = array_values(array_filter($switches, function($v) { return $v !== null && $v !== '' && strtoupper($v) !== 'N/A'; }));
+                            $colors = array_values(array_filter($colors, function($v) { return $v !== null && $v !== '' && strtoupper($v) !== 'N/A'; }));
+                        }
                         sort($layouts);
                         sort($switches);
                         sort($colors);

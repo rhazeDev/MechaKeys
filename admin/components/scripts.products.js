@@ -128,7 +128,9 @@ async function editProduct(productId) {
                 addEditVariation(variation);
             });
 
-            document.getElementById('editProductModal').classList.add('active');
+            const editModal = document.getElementById('editProductModal');
+            if (editModal) editModal.style.removeProperty('display');
+            editModal.classList.add('active');
         } else {
             showError(result.message, 'Load Failed');
         }
@@ -147,8 +149,12 @@ function addEditVariation(variationData = null) {
 
     const variationId = variationData ? variationData.VariationID : '';
     const layout = variationData ? variationData.Layout : '';
-    const switchType = variationData ? variationData.SwitchType : '';
-    const color = variationData ? variationData.Color : '';
+    const category = (document.getElementById('edit_category') && document.getElementById('edit_category').value) ? document.getElementById('edit_category').value.toString().toLowerCase() : '';
+    const blankCategories = ['switches', 'keycaps', 'accessories'];
+    const switchTypeRaw = variationData ? variationData.SwitchType : '';
+    const colorRaw = variationData ? variationData.Color : '';
+    const switchType = (switchTypeRaw && switchTypeRaw.toString().toUpperCase() === 'N/A' && blankCategories.includes(category)) ? '' : switchTypeRaw;
+    const color = (colorRaw && colorRaw.toString().toUpperCase() === 'N/A' && blankCategories.includes(category)) ? '' : colorRaw;
     const price = variationData ? variationData.Price : '';
     const stock = variationData ? variationData.StockQuantity : '';
 
@@ -219,6 +225,13 @@ async function saveProductEdit() {
         }
     });
 
+
+    const saveBtn = document.getElementById('editProductSaveBtn');
+    if (saveBtn) {
+        saveBtn.classList.add('loading');
+        saveBtn.disabled = true;
+    }
+
     try {
         const response = await fetch('api/update_product.php', {
             method: 'POST',
@@ -235,6 +248,7 @@ async function saveProductEdit() {
                     ${result.message}
                 </div>
             `;
+            showToast(result.message, 'success', 'Updated');
 
             setTimeout(() => {
                 closeModal('editProductModal');
@@ -257,7 +271,13 @@ async function saveProductEdit() {
                 Failed to update product. Please try again.
             </div>
         `;
+    } finally {
+        if (saveBtn) {
+            saveBtn.classList.remove('loading');
+            saveBtn.disabled = false;
+        }
     }
+
 }
 
 function escapeHtml(text) {
@@ -266,3 +286,49 @@ function escapeHtml(text) {
     div.textContent = String(text);
     return div.innerHTML;
 }
+
+function filterProducts() {
+    const searchInput = document.getElementById('productsSearch');
+    if (!searchInput) return;
+
+    const query = searchInput.value.toLowerCase().trim();
+    const table = document.querySelector('#products-list .data-table');
+    if (!table) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        const productName = row.querySelector('.product-name')?.textContent?.toLowerCase() || '';
+        const brand = row.cells[1]?.textContent?.toLowerCase() || '';
+        const category = row.cells[2]?.textContent?.toLowerCase() || '';
+        const price = row.cells[3]?.textContent?.toLowerCase() || '';
+        const stock = row.cells[4]?.textContent?.toLowerCase() || '';
+        const sold = row.cells[5]?.textContent?.toLowerCase() || '';
+
+        const matches = !query ||
+            productName.includes(query) ||
+            brand.includes(query) ||
+            category.includes(query) ||
+            price.includes(query) ||
+            stock.includes(query) ||
+            sold.includes(query);
+
+        row.style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+    });
+
+    const container = document.getElementById('products-list');
+    const noResultsMsg = container?.querySelector('.no-results-message');
+    if (visibleCount === 0 && query) {
+        if (!noResultsMsg) {
+            const msg = document.createElement('div');
+            msg.className = 'no-results-message';
+            msg.innerHTML = '<i class="fas fa-search"></i> No products match your search.';
+            container?.appendChild(msg);
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+

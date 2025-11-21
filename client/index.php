@@ -18,14 +18,16 @@ session_start();
 
     <?php 
     $hasCategory = isset($_GET['category']) && !empty($_GET['category']);
+    $hasSearch = isset($_GET['search']) && !empty($_GET['search']);
+    $showAllProducts = $hasCategory || $hasSearch;
     
-    if (!$hasCategory): 
+    if (!$showAllProducts): 
     ?>
         <?php include 'components/hero.php'; ?>
     <?php endif; ?>
 
     <main class="main-content">
-        <?php if ($hasCategory): ?>
+        <?php if ($showAllProducts): ?>
             <?php include 'components/all_products.php'; ?>
         <?php else: ?>
             <?php include 'components/collection.php'; ?>

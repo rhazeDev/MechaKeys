@@ -36,7 +36,7 @@ if (!preg_match('/^09[0-9]{9}$/', $contact)) {
     exit;
 }
 
-if (!empty($password)) {
+    if (!empty($password)) {
     if (strlen($password) < 8 || strlen($password) > 20) {
         echo json_encode(['success' => false, 'message' => 'Password must be 8-20 characters long']);
         exit;
@@ -76,8 +76,9 @@ try {
     $check_email->close();
 
     if (!empty($password)) {
+        $hashed_password = hash_password($password);
         $update_rider = $conn->prepare("UPDATE users SET FullName = ?, Email = ?, Contact = ?, Address = ?, Password = ? WHERE ID = ? AND Role = 'delivery'");
-        $update_rider->bind_param("sssssi", $full_name, $email, $contact, $address, $password, $rider_id);
+        $update_rider->bind_param("sssssi", $full_name, $email, $contact, $address, $hashed_password, $rider_id);
     } else {
         $update_rider = $conn->prepare("UPDATE users SET FullName = ?, Email = ?, Contact = ?, Address = ? WHERE ID = ? AND Role = 'delivery'");
         $update_rider->bind_param("ssssi", $full_name, $email, $contact, $address, $rider_id);

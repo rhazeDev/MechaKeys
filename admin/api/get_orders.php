@@ -13,7 +13,11 @@ $status_filter = isset($_GET['status']) ? $_GET['status'] : 'all';
 
 $where_clause = "";
 if ($status_filter !== 'all') {
-    $where_clause = "WHERE t.DeliveryStatus = '" . $conn->real_escape_string($status_filter) . "'";
+    if ($status_filter === 'Order Received') {
+        $where_clause = "WHERE t.DeliveryStatus = 'Order Received'";
+    } else {
+        $where_clause = "WHERE t.DeliveryStatus = '" . $conn->real_escape_string($status_filter) . "'";
+    }
 }
 
 $orders_query = "SELECT 
@@ -63,7 +67,8 @@ $stats_query = "SELECT
                     SUM(CASE WHEN t.DeliveryStatus = 'Pending' THEN 1 ELSE 0 END) as pending,
                     SUM(CASE WHEN t.DeliveryStatus = 'Assigned' THEN 1 ELSE 0 END) as assigned,
                     SUM(CASE WHEN t.DeliveryStatus IN ('Shipped', 'In Transit') THEN 1 ELSE 0 END) as shipped,
-                    SUM(CASE WHEN t.DeliveryStatus = 'Delivered' THEN 1 ELSE 0 END) as delivered
+                    SUM(CASE WHEN t.DeliveryStatus = 'Delivered' THEN 1 ELSE 0 END) as delivered,
+                    SUM(CASE WHEN t.DeliveryStatus = 'Order Received' THEN 1 ELSE 0 END) as received
                 FROM orders o
                 INNER JOIN trackings t ON o.TrackingID = t.TrackingID";
 

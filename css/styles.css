@@ -101,6 +101,7 @@ body {
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(10px);
     border: 1px solid #E0E0E0;
+    position: relative;
 }
 
 /* Message Alerts */

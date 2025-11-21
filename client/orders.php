@@ -356,8 +356,19 @@ $orders_stmt->close();
                                     View Details
                                 </button>
                                 <?php
+                                $isOrderReceived = ($status === 'Order Received');
+
+                                if ($status === 'Delivered' && !$isOrderReceived):
+                                    ?>
+                                    <button class="btn-received" onclick="confirmOrderReceived(<?php echo $order['OrderID']; ?>)">
+                                        <i class="fas fa-check-double"></i>
+                                        Order Received
+                                    </button>
+                                <?php endif; ?>
+
+                                <?php
                                 $canReturn = false;
-                                if ($status === 'Delivered' && !$hasReturn) {
+                                if ($status === 'Delivered' && !$hasReturn && !$isOrderReceived) {
                                     $orderDate = strtotime($order['PlaceOrdered']);
                                     $currentDate = time();
                                     $daysDiff = ($currentDate - $orderDate) / (60 * 60 * 24);
@@ -569,13 +580,29 @@ $orders_stmt->close();
             const order = data.order;
             const items = data.items;
 
+            function formatSpec(item, val, suffix = '') {
+                const blankCats = ['switches', 'keycaps', 'accessories'];
+                if (!val) return '';
+                if (String(val).toUpperCase() === 'N/A' && blankCats.includes((item.category || '').toLowerCase())) return '';
+                return String(val) + suffix;
+            }
+
             let itemsHtml = items.map(item => `
                 <div class="modal-order-item">
                     <img src="../${item.image}" alt="${item.product_name}" onerror="this.src='../products/placeholder.png'">
                     <div class="modal-item-info">
                         <div class="modal-item-name">${item.product_name}</div>
                         <div class="modal-item-meta">
-                            ${item.color || 'N/A'} • ${item.switch_type || 'N/A'} • ${item.layout || 'N/A'}%
+                            ${(() => {
+                    const parts = [];
+                    const c = formatSpec(item, item.color);
+                    const s = formatSpec(item, item.switch_type);
+                    const l = formatSpec(item, item.layout, '%');
+                    if (c) parts.push(c);
+                    if (s) parts.push(s);
+                    if (l) parts.push(l);
+                    return parts.join(' • ');
+                })()}
                         </div>
                         <div class="modal-item-qty">Qty: ${item.quantity}</div>
                     </div>
@@ -604,10 +631,6 @@ $orders_stmt->close();
                     const cls = 'status-' + s.toLowerCase().replace(/\s+/g, '-');
                     return `<span class="modal-value status-badge ${cls}">${s}</span>`;
                 })()}
-                    </div>
-                    <div class="modal-info-row">
-                        <span class="modal-label">Payment:</span>
-                        <span class="modal-value">${order.payment_status}</span>
                     </div>
                 </div>
                 
@@ -1110,6 +1133,33 @@ $orders_stmt->close();
                 });
         }
 
+        function confirmOrderReceived(orderId) {
+            if (!confirm('Are you sure you want to confirm receipt of this order? You won\'t be able to request a return after confirming.')) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('order_id', orderId);
+
+            fetch('api/confirm_order_received.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Order marked as received. Thank you!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to confirm order receipt'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to confirm order receipt');
+                });
+        }
+
         function openReturnModal(orderId) {
             document.getElementById('returnOrderId').value = orderId;
             document.getElementById('returnForm').reset();
@@ -1123,7 +1173,26 @@ $orders_stmt->close();
             document.getElementById('imagePreview').style.display = 'none';
         }
 
+        function autoMarkOrdersAsReceived() {
+            fetch('api/auto_mark_order_received.php', {
+                method: 'POST',
+                credentials: 'same-origin'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.count > 0) {
+                        console.log(`Auto-marked ${data.count} orders as received`);
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error auto-marking orders:', error);
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
+            autoMarkOrdersAsReceived();
+
             refreshAllReturnStatuses();
 
             const fileInput = document.getElementById('proofImage');

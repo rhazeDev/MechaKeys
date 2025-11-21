@@ -61,16 +61,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $pass_result = $pass_stmt->get_result();
         $pass_data = $pass_result->fetch_assoc();
         $pass_stmt->close();
+        $stored_password = $pass_data['Password'];
+        $is_hash = is_password_hash($stored_password);
+        $old_ok = false;
+        if ($is_hash && verify_password($old_password, $stored_password)) {
+            $old_ok = true;
+            if (needs_rehash_password($stored_password)) {
+                $rehash = hash_password($old_password);
+                $rehash_stmt = $conn->prepare("UPDATE users SET Password = ? WHERE ID = ?");
+                $rehash_stmt->bind_param("si", $rehash, $user_id);
+                $rehash_stmt->execute();
+                $rehash_stmt->close();
+            }
+        } elseif ($stored_password === $old_password) {
+            $old_ok = true;
+        }
 
-        if ($pass_data['Password'] !== $old_password) {
+        if (!$old_ok) {
             $error = 'Current password is incorrect.';
         } elseif ($new_password !== $confirm_password) {
             $error = 'New passwords do not match.';
         } elseif (strlen($new_password) < 6) {
             $error = 'New password must be at least 6 characters.';
         } else {
+            $hashed_new = hash_password($new_password);
             $update_pass_stmt = $conn->prepare("UPDATE users SET Password = ? WHERE ID = ?");
-            $update_pass_stmt->bind_param("si", $new_password, $user_id);
+            $update_pass_stmt->bind_param("si", $hashed_new, $user_id);
 
             if ($update_pass_stmt->execute()) {
                 $message = 'Password changed successfully!';

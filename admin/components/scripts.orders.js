@@ -1,4 +1,5 @@
 let deliveryRiders = [];
+let autoMarked = false;
 
 async function loadOrders(status = 'all') {
     try {
@@ -17,6 +18,12 @@ async function loadOrders(status = 'all') {
             setText('assignedOrdersCount', stats.assigned || 0);
             setText('shippedOrdersCount', stats.shipped || 0);
             setText('deliveredOrdersCount', stats.delivered || 0);
+            setText('receivedOrdersCount', stats.received || 0);
+
+            if (!autoMarked) {
+                autoMarked = true;
+                triggerAutoMarkOrders(true);
+            }
 
             deliveryRiders = result.riders || [];
 
@@ -85,6 +92,7 @@ function getStatusClass(status) {
         'Shipped': 'primary',
         'In Transit': 'primary',
         'Delivered': 'success',
+        'Order Received': 'warning',
         'Cancelled': 'error'
     };
     return statusMap[status] || 'default';
@@ -98,6 +106,51 @@ function filterOrders() {
 function refreshOrders() {
     const status = document.getElementById('orderStatusFilter').value;
     loadOrders(status);
+}
+
+function triggerAutoMarkOrders(silent = false) {
+    if (!silent && !confirm('This will auto-mark all delivered orders older than 7 days as received. Continue?')) {
+        return;
+    }
+
+    const btn = event && event.target;
+    const originalText = btn ? btn.innerHTML : null;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    }
+
+    fetch('api/auto_mark_order_received.php', {
+        method: 'POST',
+        credentials: 'same-origin'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+
+            if (data.success) {
+                const count = data.count || 0;
+                if (count > 0) {
+                    if (!silent) showSuccess(`Successfully auto-marked ${count} order(s) as received!`, 'Auto-Mark Complete');
+                    refreshOrders();
+                } else {
+                    if (!silent) showInfo('No orders needed auto-marking.', 'No Changes');
+                }
+            } else {
+                if (!silent) showError(data.message || 'Failed to auto-mark orders', 'Error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+            if (!silent) showError('Failed to auto-mark orders', 'Error');
+        });
 }
 
 async function setOrderReadyToDeliver(orderId, trackingId) {

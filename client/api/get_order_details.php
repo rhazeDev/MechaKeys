@@ -60,6 +60,7 @@ $items_sql = "SELECT
                 pv.Layout,
                 pv.SwitchType,
                 pv.Color,
+                p.Category,
                 (SELECT pi2.Path 
                  FROM ProductImages pi2 
                  WHERE pi2.ProductImageID = p.ProductImageID 
@@ -87,6 +88,7 @@ while ($row = $items_result->fetch_assoc()) {
         'layout' => $row['Layout'],
         'switch_type' => $row['SwitchType'],
         'color' => $row['Color'],
+        'category' => $row['Category'],
         'quantity' => $row['Quantity'],
         'subtotal' => $row['SubTotal'],
         'image' => $imagePath
@@ -114,10 +116,10 @@ echo json_encode([
         'delivery_person' => $order['DeliveryPersonName'] ?? 'Not Assigned',
         'delivery_person_contact' => $order['DeliveryPersonContact'] ?? '',
         'delivery_person_id' => $order['DeliveryPersonID'],
-    'delivery_person_location' => $order['DeliveryPersonLocation'] ?? '',
-    'customer_location' => $order['CustomerLocation'] ?? '',
-    'delivery_proof' => $delivery_proof ?? null,
-    'address' => $order['Address']
+        'delivery_person_location' => $order['DeliveryPersonLocation'] ?? '',
+        'customer_location' => $order['CustomerLocation'] ?? '',
+        'delivery_proof' => $delivery_proof ?? null,
+        'address' => $order['Address']
     ],
     'items' => $order_items
 ]);

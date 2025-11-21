@@ -27,7 +27,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal('editStockModal')">Cancel</button>
-            <button type="button" class="btn btn-success" onclick="updateStock()">
+            <button id="updateStockBtn" type="button" class="btn btn-success" onclick="updateStock()">
                 <i class="fas fa-save"></i>
                 Update Stock
             </button>
@@ -98,7 +98,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" onclick="closeModal('editProductModal')">Cancel</button>
-            <button type="button" class="btn btn-success" onclick="saveProductEdit()">
+            <button id="editProductSaveBtn" type="button" class="btn btn-success" onclick="saveProductEdit()">
                 <i class="fas fa-save"></i>
                 Save Changes
             </button>

@@ -28,12 +28,26 @@ function closeModal(modalId) {
     }
 
     try {
-        modal.style.display = 'none';
+        modal.style.removeProperty('display');
     } catch (e) {
     }
 
-    const editMsg = document.getElementById('edit-stock-message');
-    if (editMsg) editMsg.innerHTML = '';
+    try {
+        const alerts = modal.querySelectorAll('.alert');
+        alerts.forEach(a => a.remove());
+
+        const inputs = modal.querySelectorAll('input, textarea');
+        inputs.forEach(i => {
+        });
+
+        const buttons = modal.querySelectorAll('button');
+        buttons.forEach(b => b.disabled = false);
+    } catch (e) {
+    }
+    const editStockMsg = document.getElementById('edit-stock-message');
+    if (editStockMsg) editStockMsg.innerHTML = '';
+    const editProductMsg = document.getElementById('edit-product-message');
+    if (editProductMsg) editProductMsg.innerHTML = '';
 }
 let variationCount = 1;
 
@@ -270,6 +284,7 @@ if (addProductFormEl) {
                     ${result.message}
                 </div>
             `;
+                showToast(result.message, 'success', 'Product Created');
                 this.reset();
                 document.getElementById('imagePreview').innerHTML = '';
                 variationCount = 1;
@@ -325,6 +340,7 @@ if (addProductFormEl) {
                     ${result.message}
                 </div>
             `;
+                showToast(result.message || 'Failed to add product', 'error', 'Add Product Failed');
             }
         } catch (error) {
             messageDiv.innerHTML = `

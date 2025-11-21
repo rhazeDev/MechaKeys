@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 
 try {
-    $query = "SELECT pv.*, p.Brand as ProductBrand, p.Model as ProductModel
+    $query = "SELECT pv.*, p.Brand as ProductBrand, p.Model as ProductModel, p.Category as ProductCategory
               FROM productvariations pv
               JOIN products p ON pv.ProductID = p.ProductID
               ORDER BY pv.StockQuantity ASC, p.Brand ASC, p.Model ASC";
@@ -26,6 +26,7 @@ try {
             'Layout' => $row['Layout'],
             'SwitchType' => $row['SwitchType'],
             'Color' => $row['Color'],
+            'Category' => $row['ProductCategory'] ?? '',
             'Price' => $row['Price'],
             'StockQuantity' => $row['StockQuantity']
         ];

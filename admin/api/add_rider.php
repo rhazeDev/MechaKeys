@@ -72,8 +72,9 @@ try {
     }
     $check_email->close();
 
+    $hashed_password = hash_password($password);
     $insert_rider = $conn->prepare("INSERT INTO users (FullName, Email, Contact, Address, Password, Role, DateCreated) VALUES (?, ?, ?, ?, ?, 'delivery', NOW())");
-    $insert_rider->bind_param("sssss", $full_name, $email, $contact, $address, $password);
+    $insert_rider->bind_param("sssss", $full_name, $email, $contact, $address, $hashed_password);
 
     if ($insert_rider->execute()) {
         echo json_encode([

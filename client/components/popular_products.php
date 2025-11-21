@@ -55,6 +55,29 @@ if ($result && $result->num_rows > 0) {
             }
         }
 
+        $rawVariations = $row['Variations'] ?? '';
+        $cat = strtolower(trim($row['Category']));
+        $blankCats = ['switches', 'keycaps', 'accessories'];
+        $processedVariations = '';
+        if ($rawVariations) {
+            $parts = array_map('trim', explode(';', $rawVariations));
+            $newParts = [];
+            foreach ($parts as $p) {
+                $subparts = array_map('trim', explode('|', $p));
+                $cleanSub = [];
+                foreach ($subparts as $sp) {
+                    if ($sp === '')
+                        continue;
+                    if (strtoupper($sp) === 'N/A' && in_array($cat, $blankCats))
+                        continue;
+                    $cleanSub[] = $sp;
+                }
+                if (!empty($cleanSub))
+                    $newParts[] = implode(' | ', $cleanSub);
+            }
+            $processedVariations = implode('; ', $newParts);
+        }
+
         $featured_products[] = [
             'id' => $row['ProductID'],
             'name' => $brandPart . $row['Model'],
@@ -62,7 +85,7 @@ if ($result && $result->num_rows > 0) {
             'category' => $row['Category'],
             'price' => $priceDisplay,
             'image' => $imagePath ? '../' . $imagePath : null,
-            'specs' => $row['Variations'] ? $row['Variations'] : $row['Category'],
+            'specs' => $processedVariations ? $processedVariations : $row['Category'],
             'total_sold' => $row['TotalSold']
         ];
     }

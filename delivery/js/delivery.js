@@ -209,6 +209,8 @@ async function openOrderModal(orderId) {
     detailsDiv.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
     modal.classList.add('active');
 
+    document.body.classList.add('modal-open');
+
     try {
         const response = await fetch(`api/get_order_details.php?order_id=${orderId}`);
         const result = await response.json();
@@ -217,6 +219,13 @@ async function openOrderModal(orderId) {
             const order = result.order;
             const items = result.items;
             const tracking = result.tracking;
+
+            function formatSpec(item, val, suffix = '') {
+                const blankCats = ['switches', 'keycaps', 'accessories'];
+                if (!val) return '';
+                if (String(val).toUpperCase() === 'N/A' && blankCats.includes((item.Category || item.CategoryName || '').toString().toLowerCase())) return '';
+                return String(val) + suffix;
+            }
 
             const itemsHtml = items.map(item => `
                 <div class="order-item">
@@ -228,7 +237,18 @@ async function openOrderModal(orderId) {
                     </div>
                     <div class="item-info">
                         <h4>${item.Brand} ${item.Model}</h4>
-                        <p class="item-specs">${item.Layout}% • ${item.SwitchType} • ${item.Color}</p>
+                        <p class="item-specs">
+                            ${(() => {
+                    const parts = [];
+                    const l = formatSpec(item, item.Layout, '%');
+                    const s = formatSpec(item, item.SwitchType);
+                    const c = formatSpec(item, item.Color);
+                    if (l) parts.push(l);
+                    if (s) parts.push(s);
+                    if (c) parts.push(c);
+                    return parts.join(' • ');
+                })()}
+                        </p>
                         <p class="item-qty">Qty: ${item.Quantity}</p>
                     </div>
                     <div class="item-price">₱${parseFloat(item.SubTotal).toFixed(2)}</div>
@@ -299,6 +319,8 @@ function openStatusModal(event, orderId, trackingId, currentStatus, isReturn) {
     const modalHeader = modal.querySelector('.modal-header h2');
     modal.classList.add('active');
 
+    document.body.classList.add('modal-open');
+
     if (isReturn) {
         if (modalHeader) modalHeader.textContent = 'Update Return Status';
     } else {
@@ -340,6 +362,13 @@ function openStatusModal(event, orderId, trackingId, currentStatus, isReturn) {
         }
 
         if (currentStatus === 'Delivered') {
+            option.style.opacity = '0.5';
+            option.style.pointerEvents = 'none';
+            option.style.cursor = 'not-allowed';
+        }
+
+        if (optionStatus === currentStatus) {
+            option.classList.add('disabled');
             option.style.opacity = '0.5';
             option.style.pointerEvents = 'none';
             option.style.cursor = 'not-allowed';
@@ -424,6 +453,8 @@ function loadProfileInfo() {
 function openProfileModal() {
     const modal = document.getElementById('profileModal');
     modal.classList.add('active');
+
+    document.body.classList.add('modal-open');
 }
 
 function logoutDelivery() {
@@ -448,6 +479,11 @@ function closeModal(modalId) {
                 window.deliveryMap = null;
             }
         }
+    }
+
+    const activeModals = document.querySelectorAll('.modal.active');
+    if (activeModals.length === 0) {
+        document.body.classList.remove('modal-open');
     }
 }
 
@@ -490,6 +526,8 @@ function viewLocationMap(event, customerLocation, customerName, customerAddress)
     `;
 
     modal.classList.add('active');
+
+    document.body.classList.add('modal-open');
 
     mapboxgl.accessToken = 'pk.eyJ1IjoicmhhemUiLCJhIjoiY21memQycHB5MDFybzJrc2d2MXZiejJ6bCJ9.SO6KCjBMT50xiSTvRy0cIw';
 
@@ -735,6 +773,8 @@ function openSetLocationModal() {
         document.getElementById('selectedLocationPreview').style.display = 'none';
 
         modal.classList.add('active');
+
+        document.body.classList.add('modal-open');
     }
 }
 
@@ -955,6 +995,8 @@ function openProofOfDeliveryModal() {
         resetProofOfDeliveryModal();
         modal.classList.add('active');
         initializeCamera();
+
+        document.body.classList.add('modal-open');
     }
 }
 

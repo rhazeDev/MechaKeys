@@ -18,7 +18,11 @@ if (!in_array($filter_status, $allowed_statuses)) {
 
 $where_clause = '';
 if ($filter_status !== 'all') {
-    $where_clause = " AND r.Status = '$filter_status'";
+    if ($filter_status === 'Completed') {
+        $where_clause = " AND r.Status = 'Returned'";
+    } else {
+        $where_clause = " AND r.Status = '$filter_status'";
+    }
 }
 
 $returns_sql = "SELECT 

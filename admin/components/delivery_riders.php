@@ -429,7 +429,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Reference</label>
-                                <input type="text" id="createRemittanceReference" name="reference" class="form-input" placeholder="Optional reference">
+                                <input type="text" id="createRemittanceReference" name="reference" class="form-input" placeholder="(Optional) reference">
                             </div>
                             <div class="form-group full-width">
                                 <label>Notes</label>

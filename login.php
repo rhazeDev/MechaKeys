@@ -19,9 +19,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         goto end_login;
     }
 
-    $sql = "SELECT ID, Email, Role FROM users WHERE email = ? AND password = ?";
+    $sql = "SELECT ID, Email, Role, Password FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $email, $password);
+    $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -37,6 +37,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     $user = $result->fetch_assoc();
+    $stored_password = $user['Password'];
+
+    $is_hash = is_password_hash($stored_password);
+
+    $login_ok = false;
+    if ($is_hash && verify_password($password, $stored_password)) {
+        $login_ok = true;
+    } elseif ($stored_password === $password) {
+        $login_ok = true;
+        $new_hash = hash_password($password);
+        $upd_stmt = $conn->prepare("UPDATE users SET Password = ? WHERE ID = ?");
+        $upd_stmt->bind_param("si", $new_hash, $user['ID']);
+        $upd_stmt->execute();
+        $upd_stmt->close();
+        $stored_password = $new_hash;
+    }
+
+    if (!$login_ok) {
+        $message = "❌ Invalid email or password.";
+        $stmt->close();
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        goto end_login;
+    }
     $_SESSION['user_id'] = $user['ID'];
     $_SESSION['email'] = $user['Email'];
     $_SESSION['role'] = $user['Role'];

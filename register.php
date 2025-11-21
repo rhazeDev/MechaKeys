@@ -98,9 +98,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         goto end_register;
     }
 
+    $hashed_password = hash_password($password);
+
     $sql = "INSERT INTO users (FullName, Email, Password, Role) VALUES (?, ?, ?, 'customer')";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $fullname, $email, $password);
+    $stmt->bind_param("sss", $fullname, $email, $hashed_password);
 
     if (!$stmt->execute()) {
         $message = "❌ Error creating account. Please try again.";

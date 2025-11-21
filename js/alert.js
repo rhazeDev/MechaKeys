@@ -193,15 +193,43 @@ class CustomAlert {
                 ${title ? `<div class="toast-title">${title}</div>` : ''}
                 <div class="toast-message">${message}</div>
             </div>
-            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            <button class="toast-close">×</button>
         `;
 
-        container.appendChild(toast);
+        const APPEAR_DELAY = 500;
+        const showTimeout = setTimeout(() => {
+            container.appendChild(toast);
 
-        setTimeout(() => {
-            toast.classList.add('removing');
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
+            requestAnimationFrame(() => {
+                toast.classList.add('enter');
+            });
+
+            const removeTimeout = setTimeout(() => {
+                toast.classList.add('removing');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+
+            toast._removeTimeout = removeTimeout;
+
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (toast._appearTimeout) {
+                        clearTimeout(toast._appearTimeout);
+                        delete toast._appearTimeout;
+                    }
+                    if (toast._removeTimeout) {
+                        clearTimeout(toast._removeTimeout);
+                        delete toast._removeTimeout;
+                    }
+                    toast.classList.add('removing');
+                    setTimeout(() => toast.remove(), 300);
+                });
+            }
+        }, APPEAR_DELAY);
+
+        toast._appearTimeout = showTimeout;
     }
 }
 
@@ -215,20 +243,20 @@ function showAlert(message, type = 'info', title = '') {
     });
 }
 
-function showSuccess(message, title = 'Success') {
-    customAlert.success(message, title);
+function showSuccess(message, title = 'Success', duration = 3000) {
+    customAlert.toast({ type: 'success', title, message, duration });
 }
 
-function showError(message, title = 'Error') {
-    customAlert.error(message, title);
+function showError(message, title = 'Error', duration = 3000) {
+    customAlert.toast({ type: 'error', title, message, duration });
 }
 
-function showWarning(message, title = 'Warning') {
-    customAlert.warning(message, title);
+function showWarning(message, title = 'Warning', duration = 3000) {
+    customAlert.toast({ type: 'warning', title, message, duration });
 }
 
-function showInfo(message, title = 'Information') {
-    customAlert.info(message, title);
+function showInfo(message, title = 'Information', duration = 3000) {
+    customAlert.toast({ type: 'info', title, message, duration });
 }
 
 function showConfirm(message, onConfirm, onCancel = null, title = 'Confirm') {

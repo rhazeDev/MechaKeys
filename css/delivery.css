@@ -48,6 +48,7 @@ body {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    padding-top: 80px;
 }
 
 /* ============================================
@@ -58,8 +59,10 @@ body {
     background: white;
     border-bottom: 1px solid var(--border);
     padding: 16px;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
     box-shadow: var(--shadow);
 }
@@ -882,8 +885,8 @@ body {
 
     .delivery-header {
         border-radius: 12px;
-        margin: 20px 0 0;
-        position: relative;
+        margin: 0;
+        position: fixed;
         padding: 20px 24px;
     }
 

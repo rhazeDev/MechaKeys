@@ -43,6 +43,7 @@ try {
             pv.Layout,
             pv.SwitchType,
             pv.Color,
+            p.Category,
             pv.Price,
             (SELECT Path FROM productimages WHERE ProductImageID = p.ProductImageID LIMIT 1) as ImagePath
         FROM orderitems oi

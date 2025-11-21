@@ -14,6 +14,7 @@
                     <option value="Assigned">Assigned</option>
                     <option value="In Transit">In Transit</option>
                     <option value="Delivered">Delivered</option>
+                    <option value="Order Received">Order Received</option>
                     <option value="Cancelled">Cancelled</option>
                 </select>
                 <button class="btn btn-secondary" onclick="refreshOrders()">
@@ -59,6 +60,15 @@
                 <div>
                     <div class="stat-value-small" id="deliveredOrdersCount">0</div>
                     <div class="stat-label-small">Delivered</div>
+                </div>
+            </div>
+            <div class="stat-card-small">
+                <div class="stat-icon-small warning">
+                    <i class="fas fa-hand-holding-heart"></i>
+                </div>
+                <div>
+                    <div class="stat-value-small" id="receivedOrdersCount">0</div>
+                    <div class="stat-label-small">Order Received</div>
                 </div>
             </div>
         </div>
