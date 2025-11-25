@@ -581,17 +581,17 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`ID`, `FullName`, `Email`, `Password`, `Contact`, `Address`, `Location`, `Role`, `Coins`, `DateCreated`) VALUES
-(1, 'Justine Agcanas', 'customer@gmail.com', '$2y$10$3BahdjMnBOTBo6FC/6VyQOXlNCgP/818SMolBWMN4TnCTHbIHBWwu', '09182738829', 'J. P. Rizal Avenue Bgy. No. 1, Laoag City, Ilocos Norte, Philippines', '120.58544005175321,18.1991155548574', 'customer', 5828.00, '2025-10-16 20:57:36'),
+(1, 'Justine Agcanas', 'customer@gmail.com', '$2y$10$3BahdjMnBOTBo6FC/6VyQOXlNCgP/818SMolBWMN4TnCTHbIHBWwu', '09182738829', 'J. P. Rizal Avenue Bgy. No. 1, Laoag City, Ilocos Norte, Philippines', '', 'customer', 5828.00, '2025-10-16 20:57:36'),
 (2, 'Admin Justine', 'admin@gmail.com', '$2y$10$wTWVyRSuPT.brut5JIikIuWKZgfnDEWdz.4PfRssiDiB.BetEg1QW', '', '', '', 'admin', 0.00, '2025-10-16 21:01:44'),
-(3, 'Justine Delivery', 'delivery@gmail.com', '$2y$10$Otfgo.ws5ePSJOLnjWvYHOg625AA5.YDjpM8KLlPihmoH9gQ.ZFwS', '09283028474', 'J. P. Rizal Avenue Bgy. No. 1, Laoag City, Ilocos Norte, Philippines', '120.6843731,18.0768336', 'delivery', 0.00, '2025-10-26 19:16:54'),
+(3, 'Justine Delivery', 'delivery@gmail.com', '$2y$10$Otfgo.ws5ePSJOLnjWvYHOg625AA5.YDjpM8KLlPihmoH9gQ.ZFwS', '09283028474', 'J. P. Rizal Avenue Bgy. No. 1, Laoag City, Ilocos Norte, Philippines', '', 'delivery', 0.00, '2025-10-26 19:16:54'),
 (4, 'John Burat', 'johnburat@gmail.com', '$2y$10$oR8fF3/t6U3Y8eEVInOyJeLMjBAq.q4wPg7PKy9UpJEF.HQme/JXK', '09654345674', 'Brgy. 13 Magat Laod Laoag City', '', 'customer', 0.00, '2025-10-26 21:28:00'),
 (5, 'Rayan Bautista', 'ryanpalalay04@gmail.com', '$2y$10$zlIEbGp5qr/an.ZGBhv0KezlPUxtgpsFtwMtlMMtjFSGlxR8eTqUS', '09392467600', 'Brgy. Saoit, Burgos, Ilocos Norte', '', 'customer', 0.00, '2025-10-28 08:08:59'),
-(6, 'doraimon', 'doraimon@gmail.com', '$2y$10$q8KwNdSLV.aL96n.40hSTOcDU6G.G3FSEuGeA2ysJQFHKt.kfuCZi', '09274473721', 'J. P. Rizal Avenue Bgy. No. 11, Laoag City, Ilocos Norte, Philippines', '120.59134538126494,18.19673683978084', 'customer', 0.00, '2025-10-28 09:26:51'),
-(7, 'Ryan Delivery', 'ryandelivery@gmail.com', '$2y$10$PGSQJnCokc5qf4QFUTFwE.P1eTjRnXiIxrf9vsODyjvb6EO/vWTUK', '09832948903', '69 Purok 7 Saoit Burgos Ilocos Norte', '120.5895168,16.4134912', 'delivery', 0.00, '2025-11-10 19:17:11'),
-(8, 'Arjay Delivery', 'arjaydelivery@gmail.com', '$2y$10$tw9v47b4EsqCvHUH3slSUOOHENqSH0r.BSnbe9StdtcggRzo1zqsm', '09873429823', '67 Sitio Papa Bangsar Banna Ilocos Norte', '120.584289,18.1989127', 'delivery', 0.00, '2025-11-10 19:17:57'),
+(6, 'doraimon', 'doraimon@gmail.com', '$2y$10$q8KwNdSLV.aL96n.40hSTOcDU6G.G3FSEuGeA2ysJQFHKt.kfuCZi', '09274473721', 'J. P. Rizal Avenue Bgy. No. 11, Laoag City, Ilocos Norte, Philippines', '', 'customer', 0.00, '2025-10-28 09:26:51'),
+(7, 'Ryan Delivery', 'ryandelivery@gmail.com', '$2y$10$PGSQJnCokc5qf4QFUTFwE.P1eTjRnXiIxrf9vsODyjvb6EO/vWTUK', '09832948903', '69 Purok 7 Saoit Burgos Ilocos Norte', '', 'delivery', 0.00, '2025-11-10 19:17:11'),
+(8, 'Arjay Delivery', 'arjaydelivery@gmail.com', '$2y$10$tw9v47b4EsqCvHUH3slSUOOHENqSH0r.BSnbe9StdtcggRzo1zqsm', '09873429823', '67 Sitio Papa Bangsar Banna Ilocos Norte', '', 'delivery', 0.00, '2025-11-10 19:17:57'),
 (9, 'asd', 'asd@l.com', '$2y$10$wfsnm8UtIgon.gkUeQrsmuDTpnzll.x8g4P8rtxB.ocQ.OQgcEsyq', '', '', NULL, 'customer', 0.00, '2025-11-18 09:56:18'),
 (10, 'Jayjayrillorta', 'Jayjayrillorta@gmail.com', '$2y$10$qhoq/buKdPdSOX9a73v.H.h8IT/AMshe.gk9LjWu86qZIzboQNxQu', '', '', NULL, 'customer', 0.00, '2025-11-18 09:57:26'),
-(11, 'Loki Baltazar', 'loki@gmail', '$2y$10$hrCAGWtS9oOLNoNThooJueaUnnAGyifo5mPIuRz3xvG55Fwh6KO6O', '09999999999', 'Governor Primo Lazaro Street Bgy. No. 13, Laoag City, Ilocos Norte, Philippines', '120.59719071960649,18.19646226683389', 'customer', 0.00, '2025-11-18 10:01:04'),
+(11, 'Loki Baltazar', 'loki@gmail', '$2y$10$hrCAGWtS9oOLNoNThooJueaUnnAGyifo5mPIuRz3xvG55Fwh6KO6O', '09999999999', 'Governor Primo Lazaro Street Bgy. No. 13, Laoag City, Ilocos Norte, Philippines', '', 'customer', 0.00, '2025-11-18 10:01:04'),
 (12, 'Justine Agcanas', 'testnew@gmail.com', '$2y$10$yDBoVSYNm3PDTvJP3QIpoeXWKgOloE/ppgHO4iCWH2t98Ck64WqYO', '', '', NULL, 'customer', 0.00, '2025-11-21 18:12:30');
 
 --
